@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"foreverzang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="服务简介永中文档在线预览软件（以下简称：永中DCS）是永中Office针对政企单位提供的文件预览与文件转换服务，可同时供多个业务系统进行对接和集成， 赋能业务系统实现Office文档、PDF、OFD等格式文档的在线预览与文档批量格式转换。软件包含两个独立的服务，需要业务系统同时集成这两个服务方可实现在线文档处理功能：  在线预览：DCS（标准版）&#x2F; FCS（高级版） 在线编辑：WebOf">
+<meta property="og:type" content="article">
+<meta property="og:title" content="永中在线文档部署">
+<meta property="og:url" content="https://foreverzang.github.io/2023/09/12/weboffice-yozo-setup/index.html">
+<meta property="og:site_name" content="zangh&#39;s blog">
+<meta property="og:description" content="服务简介永中文档在线预览软件（以下简称：永中DCS）是永中Office针对政企单位提供的文件预览与文件转换服务，可同时供多个业务系统进行对接和集成， 赋能业务系统实现Office文档、PDF、OFD等格式文档的在线预览与文档批量格式转换。软件包含两个独立的服务，需要业务系统同时集成这两个服务方可实现在线文档处理功能：  在线预览：DCS（标准版）&#x2F; FCS（高级版） 在线编辑：WebOf">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://42.192.155.41/yozo/fcs/20230913105256.png">
+<meta property="og:image" content="http://42.192.155.41/yozo/fcs/20230913105404.png">
+<meta property="og:image" content="http://42.192.155.41/yozo/fcs/20230913105513.png">
+<meta property="og:image" content="http://42.192.155.41/yozo/fcs/20230913105544.png">
+<meta property="og:image" content="http://42.192.155.41/yozo/wo/20230913151200.png">
+<meta property="og:image" content="http://42.192.155.41/yozo/wo/20230913152721.png">
+<meta property="og:image" content="http://42.192.155.41/yozo/wo/20230913152748.png">
+<meta property="og:image" content="http://42.192.155.41/yozo/wo/20230913153155.png">
+<meta property="og:image" content="http://42.192.155.41/yozo/wo/20230913153222.png">
+<meta property="article:published_time" content="2023-09-12T08:53:40.000Z">
+<meta property="article:modified_time" content="2023-09-15T02:04:56.871Z">
+<meta property="article:author" content="zangh">
+<meta property="article:tag" content="笔记">
+<meta property="article:tag" content="部署">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://42.192.155.41/yozo/fcs/20230913105256.png">
+
+<link rel="canonical" href="https://foreverzang.github.io/2023/09/12/weboffice-yozo-setup/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>永中在线文档部署 | zangh's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">zangh's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录 总结 备查</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://foreverzang.github.io/2023/09/12/weboffice-yozo-setup/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/my-avatar.jpg">
+      <meta itemprop="name" content="zangh">
+      <meta itemprop="description" content="不积跬步 无以至千里">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="zangh's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          永中在线文档部署
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-09-12 16:53:40" itemprop="dateCreated datePublished" datetime="2023-09-12T16:53:40+08:00">2023-09-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-09-15 10:04:56" itemprop="dateModified" datetime="2023-09-15T10:04:56+08:00">2023-09-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/" itemprop="url" rel="index"><span itemprop="name">中间件</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%B0%B8%E4%B8%AD%E6%96%87%E6%A1%A3/" itemprop="url" rel="index"><span itemprop="name">永中文档</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2023/09/12/weboffice-yozo-setup/" class="post-meta-item leancloud_visitors" data-flag-title="永中在线文档部署" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>20k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>18 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="服务简介"><a href="#服务简介" class="headerlink" title="服务简介"></a>服务简介</h3><p>永中文档在线预览软件（以下简称：永中DCS）是永中Office针对政企单位提供的文件预览与文件转换服务，可同时供多个业务系统进行对接和集成， 赋能业务系统实现Office文档、PDF、OFD等格式文档的在线预览与文档批量格式转换。软件包含两个独立的服务，需要业务系统同时集成这两个服务方可实现在线文档处理功能：</p>
+<ul>
+<li>在线预览：DCS（标准版）&#x2F; <strong>FCS（高级版）</strong></li>
+<li>在线编辑：<strong>WebOffice</strong></li>
+<li>以上两个服务可以独立部署、互不干涉的使用</li>
+</ul>
+<span id="more"></span>
+
+<h3 id="FCS（高级版）部署"><a href="#FCS（高级版）部署" class="headerlink" title="FCS（高级版）部署"></a>FCS（高级版）部署</h3><h4 id="环境要求"><a href="#环境要求" class="headerlink" title="环境要求"></a>环境要求</h4><h5 id="推荐环境"><a href="#推荐环境" class="headerlink" title="推荐环境"></a>推荐环境</h5><blockquote>
+<p> 如下，摘抄自<a target="_blank" rel="noopener" href="http://42.192.155.41/yozo/fcs/%E6%B0%B8%E4%B8%AD%E6%96%87%E6%A1%A3DCS%E9%AB%98%E7%BA%A7%E7%89%88(FCS)%E8%AF%A6%E7%BB%86%E9%83%A8%E7%BD%B2%E8%AF%B4%E6%98%8E(%E5%8C%85%E5%90%AB%E5%9B%BD%E4%BA%A7%E5%8C%96).pdf">《永中文档DCS高级版(FCS)详细部署说明(包含国产化).pdf》</a>第二节。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th align="center">操作系统</th>
+<th align="center">CPU架构</th>
+<th align="center">Java环境</th>
+<th align="center">中间件</th>
+<th align="center">redis</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Centos7</td>
+<td align="center">x86_64</td>
+<td align="center">Sunjdk1.8</td>
+<td align="center">Apache-Tomcat-9.0.37</td>
+<td align="center">redis_x86.tar.gz</td>
+</tr>
+</tbody></table>
+<h5 id="服务器节点"><a href="#服务器节点" class="headerlink" title="服务器节点"></a>服务器节点</h5><table>
+<thead>
+<tr>
+<th align="center">主机名</th>
+<th align="center">操作系统</th>
+<th align="center">网络IP</th>
+<th align="center">硬件配置</th>
+<th align="center">预装软件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">ejy-kf2-jyxt2</td>
+<td align="center">CentOS Linux release 7.5.1804 (Core)</td>
+<td align="center">192.168.11.199</td>
+<td align="center">8c16g-80g</td>
+<td align="center">Docker-19.03.5</td>
+</tr>
+</tbody></table>
+<h4 id="部署资料"><a href="#部署资料" class="headerlink" title="部署资料"></a>部署资料</h4><ol>
+<li><a target="_blank" rel="noopener" href="http://42.192.155.41/yozo/fcs/redis_x86.tar.gz">redis_86.tar.gz</a></li>
+<li>yozo-gateway.jar（自定义的封装网关，后续可作为限流、鉴权的扩展点）</li>
+<li>fonts.rar（中文字体库）</li>
+<li>config.eni、fcs临时授权11.1.eni（授权证书）</li>
+<li>jdk-8u221-linux-x64.tar.gz</li>
+<li>apache-tomcat-9.0.65.tar.gz</li>
+<li>fcscloud.war（官方安装包）</li>
+</ol>
+<h4 id="部署脚本"><a href="#部署脚本" class="headerlink" title="部署脚本"></a>部署脚本</h4><p>为了在允许的情况下尽量简化服务部署，本服务使用Docker容器化进行部署。</p>
+<h5 id="Redis容器化"><a href="#Redis容器化" class="headerlink" title="Redis容器化"></a>Redis容器化</h5><blockquote>
+<p>配置细节参考<a target="_blank" rel="noopener" href="http://42.192.155.41/yozo/fcs/%E6%B0%B8%E4%B8%AD%E6%96%87%E6%A1%A3DCS%E9%AB%98%E7%BA%A7%E7%89%88(FCS)%E8%AF%A6%E7%BB%86%E9%83%A8%E7%BD%B2%E8%AF%B4%E6%98%8E(%E5%8C%85%E5%90%AB%E5%9B%BD%E4%BA%A7%E5%8C%96).pdf">《永中文档DCS高级版(FCS)详细部署说明(包含国产化).pdf》</a>第五章节。</p>
+</blockquote>
+<h6 id="整体目录预览"><a href="#整体目录预览" class="headerlink" title="整体目录预览"></a>整体目录预览</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-kf2-jyxt2 redis]# tree /usr/local/yozo/redis/</span><br><span class="line">/usr/local/yozo/redis/    # 服务所在目录*</span><br><span class="line">├── data				  # 用于映射进容器，作为持久化存储卷</span><br><span class="line">├── Dockerfile		 ### 注：Docker镜像生成脚本，后面详解**</span><br><span class="line">├── logs				  # 用于映射进容器，作为日志输出目录</span><br><span class="line">├── redis_x86             # 由redis_86.tar.gz解压出来的</span><br><span class="line">│   ├── bin</span><br><span class="line">│   │   ├── redis-benchmark</span><br><span class="line">│   │   ├── redis-check-aof</span><br><span class="line">│   │   ├── redis-check-rdb</span><br><span class="line">│   │   ├── redis-cli</span><br><span class="line">│   │   ├── redis-sentinel</span><br><span class="line">│   │   └── redis-server</span><br><span class="line">│   ├── redis.conf        # redis的配置文件，不多赘述</span><br><span class="line">│   └── start.sh     ### 注：我们自己编写的容器内服务启动脚本、后面详解**</span><br><span class="line">└── restart.sh       ### 注：我们自己编写的容器启动脚本、后面详解**</span><br></pre></td></tr></table></figure>
+
+<h6 id="start-sh-容器脚本"><a href="#start-sh-容器脚本" class="headerlink" title="start.sh 容器脚本"></a>start.sh 容器脚本</h6><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line"># 替换密码</span><br><span class="line">sed -i &quot;s/port 6379/port $&#123;PORT&#125;/&quot; /opt/redis/redis.conf</span><br><span class="line">sed -i &quot;s/# requirepass foobared/requirepass $&#123;PASSWD&#125;/&quot; /opt/redis/redis.conf</span><br><span class="line">sed -i &quot;s/databases 16/databases $&#123;DBS&#125;/&quot; /opt/redis/redis.conf</span><br><span class="line"># 启动服务</span><br><span class="line">./bin/redis-server redis.conf</span><br></pre></td></tr></table></figure>
+
+<h6 id="Dockerfile-镜像生成档"><a href="#Dockerfile-镜像生成档" class="headerlink" title="Dockerfile 镜像生成档"></a>Dockerfile 镜像生成档</h6><blockquote>
+<p>Dockerfile的语法规则，感兴趣可以自行百度，这里不多做赘述。</p>
+</blockquote>
+<figure class="highlight do"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">FROM centos:centos7</span><br><span class="line"># 作者信息</span><br><span class="line">MAINTAINER zangh&lt;zangh@ejy365.com&gt;</span><br><span class="line"># 复制redis到镜像</span><br><span class="line"><span class="keyword">COPY</span> redis_x86 /opt/redis</span><br><span class="line"># 兼容中文字符</span><br><span class="line">ENV LANG en_US.UTF-8</span><br><span class="line"># 工作目录</span><br><span class="line">WORKDIR /opt/redis</span><br><span class="line"><span class="keyword">RUN</span> <span class="keyword">mkdir</span> -p /opt/redis/data /opt/redis/logs</span><br><span class="line"># 环境变量</span><br><span class="line">ENV PORT 6379</span><br><span class="line">ENV PASSWD <span class="string">&quot;123456&quot;</span></span><br><span class="line">ENV DBS 3</span><br><span class="line"># 暴露端口</span><br><span class="line">EXPOSE 6379</span><br><span class="line"># 启动服务（此处用到了上面我们自己定义的服务启动脚本 *start.<span class="keyword">sh</span>*）</span><br><span class="line">ENTRYPOINT [<span class="string">&quot;/bin/bash&quot;</span>, <span class="string">&quot;start.sh&quot;</span>]</span><br></pre></td></tr></table></figure>
+
+<h6 id="restart-sh-启动脚本"><a href="#restart-sh-启动脚本" class="headerlink" title="restart.sh 启动脚本"></a>restart.sh 启动脚本</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line">name=yozo-redis</span><br><span class="line">dir=/usr/local/yozo/redis</span><br><span class="line">cId=$(docker ps -a | grep $name | awk &#x27;&#123;print $1&#125;&#x27;)</span><br><span class="line"></span><br><span class="line">if [ -n &quot;$cId&quot; ]; then</span><br><span class="line">     echo &quot;$name container id : $cId&quot;</span><br><span class="line">else</span><br><span class="line">     echo &quot;$name init&quot;</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">if [ -n &quot;$cId&quot; ]; then</span><br><span class="line">     sId=$(docker ps | grep $name | awk &#x27;&#123;print $1&#125;&#x27;)</span><br><span class="line">     if [ -n &quot;$sId&quot; ]; then</span><br><span class="line">         echo &quot;stop container id :&quot;</span><br><span class="line">         docker stop $sId</span><br><span class="line">     fi</span><br><span class="line">     echo &quot;rm container id :&quot;</span><br><span class="line">     docker rm $cId</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">echo &quot;restart container&quot;</span><br><span class="line">docker run --name $name \</span><br><span class="line">--restart=always \</span><br><span class="line">-v /etc/localtime:/etc/localtime:ro \</span><br><span class="line">-v $dir/data/:/opt/redis/data/ \</span><br><span class="line">-v $dir/logs/:/opt/redis/logs/ \</span><br><span class="line">-p 6379:6379 \</span><br><span class="line">-e &quot;PORT=6379&quot; \</span><br><span class="line">-e &quot;PASSWD=654321&quot; \</span><br><span class="line">-e &quot;DBS=3&quot; \</span><br><span class="line">-d yozo-redis:0.0.1</span><br></pre></td></tr></table></figure>
+
+<h5 id="FCS容器化"><a href="#FCS容器化" class="headerlink" title="FCS容器化"></a>FCS容器化</h5><blockquote>
+<p>配置细节参考<a target="_blank" rel="noopener" href="http://42.192.155.41/yozo/fcs/%E6%B0%B8%E4%B8%AD%E6%96%87%E6%A1%A3DCS%E9%AB%98%E7%BA%A7%E7%89%88(FCS)%E8%AF%A6%E7%BB%86%E9%83%A8%E7%BD%B2%E8%AF%B4%E6%98%8E(%E5%8C%85%E5%90%AB%E5%9B%BD%E4%BA%A7%E5%8C%96).pdf">《永中文档DCS高级版(FCS)详细部署说明(包含国产化).pdf》</a>第四、六、七章节。</p>
+</blockquote>
+<h6 id="整体目录预览-1"><a href="#整体目录预览-1" class="headerlink" title="整体目录预览"></a>整体目录预览</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-kf2-jyxt2 yozo]# tree /usr/local/yozo/fcs/ -L 2</span><br><span class="line">/usr/local/yozo/fcs/           # 服务所在目录*</span><br><span class="line">├── conf</span><br><span class="line">│   ├── application.yml        # 整体的项目配置文件（不修改），这里我们通过resources/start.sh脚本进行了关键配置的简化</span><br><span class="line">│   ├── config.eni			   # 授权文件1（来自服务提供商*）</span><br><span class="line">│   └── fcs.eni                # 授权文件2（来自服务提供商，用前面的”fcs临时授权11.1.eni“替换*）</span><br><span class="line">├── Dockerfile         ### 注：Docker镜像生成脚本**</span><br><span class="line">├── docs                       # 用于映射进容器，作为持久化存储卷</span><br><span class="line">├── logs					   # 用于映射进容器，作为日志输出目录</span><br><span class="line">├── resources</span><br><span class="line">│   ├── apache-tomcat-9.0.65   # 由apache-tomcat-9.0.65.tar.gz解压的来，并按照官方部署文档要求，把fcs服务的代码放到tomcat里面</span><br><span class="line">│   ├── fonts                  # fonts.rar中文字体库（打包Windows系统的C:\Windows\Fonts得到）</span><br><span class="line">│   ├── jdk1.8.0_221		   # 解压jdk-8u221-linux-x64.tar.gz得到</span><br><span class="line">│   ├── jdk8.sh        ### 注：配置容器内jdk环境变量**</span><br><span class="line">│   └── start.sh       ### 注：我们自己编写的容器内服务启动脚本、后面详解**</span><br><span class="line">└── restart.sh         ### 注：我们自己编写的容器启动脚本、后面详解**</span><br></pre></td></tr></table></figure>
+
+<h6 id="jdk8-sh-环境配置"><a href="#jdk8-sh-环境配置" class="headerlink" title="jdk8.sh 环境配置"></a>jdk8.sh 环境配置</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">配置jdk环境变量</span></span><br><span class="line">export JAVA_HOME=/opt/fcs/jdk</span><br><span class="line">export PATH=$JAVA_HOME/bin:$PATH</span><br><span class="line">export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar</span><br></pre></td></tr></table></figure>
+
+<h6 id="start-sh-容器脚本-1"><a href="#start-sh-容器脚本-1" class="headerlink" title="start.sh 容器脚本"></a>start.sh 容器脚本</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">使jdk8.sh配置的环境变量生效</span></span><br><span class="line">source /etc/profile</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">以下用docker的环境变量替换指定的项目、tomcat配置</span></span><br><span class="line">sed -i &quot;s/cacheMaxSize=\&quot;CACHE_MAX_SIZE\&quot;/cacheMaxSize=\&quot;$&#123;CACHE_MAX_SIZE&#125;\&quot;/g&quot; /opt/fcs/tomcat/conf/context.xml</span><br><span class="line">sed -i &quot;s/port=\&quot;HTTP_PORT\&quot;/port=\&quot;$&#123;HTTP_PORT&#125;\&quot;/g&quot; /opt/fcs/tomcat/conf/server.xml</span><br><span class="line">sed -i &quot;s/host: REDIS_HOST/host: $&#123;REDIS_HOST&#125;/g&quot; /opt/fcs/tomcat/webapps/ROOT/WEB-INF/classes/application.yml</span><br><span class="line">sed -i &quot;s/port: REDIS_PORT/port: $&#123;REDIS_PORT&#125;/g&quot; /opt/fcs/tomcat/webapps/ROOT/WEB-INF/classes/application.yml</span><br><span class="line">sed -i &quot;s/password: REDIS_PASS/password: $&#123;REDIS_PASS&#125;/g&quot; /opt/fcs/tomcat/webapps/ROOT/WEB-INF/classes/application.yml</span><br><span class="line">sed -i &quot;s/database: REDIS_DB/database: $&#123;REDIS_DB&#125;/g&quot; /opt/fcs/tomcat/webapps/ROOT/WEB-INF/classes/application.yml</span><br><span class="line">sed -i &quot;s#MY_LOG_HOME#$&#123;LOGS_PATH&#125;#g&quot; /opt/fcs/tomcat/webapps/ROOT/WEB-INF/classes/log4j2.xml</span><br><span class="line">sed -i &quot;s#MY_VIEW_DOMAIN#$&#123;VIEW_DOMAIN&#125;#g&quot; /opt/fcs/tomcat/webapps/ROOT/WEB-INF/classes/config.properties</span><br><span class="line">sed -i &quot;s#MY_INPUT_DIR#$&#123;INPUT_DIR&#125;#g&quot; /opt/fcs/tomcat/webapps/ROOT/WEB-INF/classes/config.properties</span><br><span class="line">sed -i &quot;s#MY_OUTPUT_DIR#$&#123;OUTPUT_DIR&#125;#g&quot; /opt/fcs/tomcat/webapps/ROOT/WEB-INF/classes/config.properties</span><br><span class="line">sed -i &quot;s/=MY_CONVERT_POOL_SIZE/=$&#123;CONVERT_POOL_SIZE&#125;/g&quot; /opt/fcs/tomcat/webapps/ROOT/WEB-INF/classes/config.properties</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">启动apache服务（需要前台启动）</span></span><br><span class="line">/opt/fcs/tomcat/bin/catalina.sh run</span><br></pre></td></tr></table></figure>
+
+<h6 id="Dockerfile-镜像生成档-1"><a href="#Dockerfile-镜像生成档-1" class="headerlink" title="Dockerfile 镜像生成档"></a>Dockerfile 镜像生成档</h6><figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> centos:centos7</span><br><span class="line"><span class="comment"># 作者信息</span></span><br><span class="line"><span class="keyword">MAINTAINER</span> zangh&lt;zangh@ejy365.com&gt;</span><br><span class="line"><span class="comment"># 复制所需软件到镜像</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> resources/jdk1.8.0_221 /opt/fcs/jdk</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> resources/apache-tomcat-9.0.65 /opt/fcs/tomcat</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> resources/jdk8.sh /etc/profile.d/jdk8.sh</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> resources/start.sh /opt/fcs/start.sh</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> resources/fonts /usr/X11R6/lib/X11/fonts/TrueType</span></span><br><span class="line"><span class="comment"># 兼容中文字符</span></span><br><span class="line"><span class="keyword">ENV</span> LANG en_US.UTF-<span class="number">8</span></span><br><span class="line"><span class="comment"># 环境变量（上一小节的start.sh需要用到）</span></span><br><span class="line"><span class="keyword">ENV</span> CACHE_MAX_SIZE <span class="number">10000</span></span><br><span class="line"><span class="keyword">ENV</span> HTTP_PORT <span class="number">18090</span></span><br><span class="line"><span class="keyword">ENV</span> VIEW_DOMAIN http://<span class="number">192.168</span>.<span class="number">11.20</span>:<span class="number">18090</span>/</span><br><span class="line"><span class="keyword">ENV</span> CONVERT_POOL_SIZE <span class="number">1</span></span><br><span class="line"><span class="keyword">ENV</span> INPUT_DIR /opt/fcs/docs/input</span><br><span class="line"><span class="keyword">ENV</span> OUTPUT_DIR /opt/fcs/docs/output</span><br><span class="line"><span class="keyword">ENV</span> LOGS_PATH /opt/fcs/logs</span><br><span class="line"><span class="comment"># Redis配置</span></span><br><span class="line"><span class="keyword">ENV</span> REDIS_HOST <span class="number">127.0</span>.<span class="number">0.1</span></span><br><span class="line"><span class="keyword">ENV</span> REDIS_PORT <span class="number">6379</span></span><br><span class="line"><span class="keyword">ENV</span> REDIS_PASS <span class="number">654321</span></span><br><span class="line"><span class="keyword">ENV</span> REDIS_DB <span class="number">0</span></span><br><span class="line"><span class="comment"># 赋予执行权限</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">chmod</span> -R +x /opt/fcs/jdk/bin /opt/fcs/tomcat/bin /usr/X11R6/lib/X11/fonts/TrueType</span></span><br><span class="line"><span class="comment"># 工作目录</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="language-bash"> /opt/fcs</span></span><br><span class="line"><span class="comment"># 暴露端口</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">18090</span></span><br><span class="line"><span class="comment"># 启动服务</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="language-bash"> [<span class="string">&quot;/bin/bash&quot;</span>, <span class="string">&quot;start.sh&quot;</span>]</span></span><br></pre></td></tr></table></figure>
+
+<h6 id="restart-sh-启动脚本-1"><a href="#restart-sh-启动脚本-1" class="headerlink" title="restart.sh 启动脚本"></a>restart.sh 启动脚本</h6><ul>
+<li>其中<strong>config.eni</strong>：替换为服务商提供的证书，参考《永中文档DCS高级版(FCS)详细部署说明(包含国产化).pdf》第6.4小节</li>
+<li>其中<strong>fcs.eni</strong>：替换为服务商提供的证书，参考《永中文档DCS高级版(FCS)详细部署说明(包含国产化).pdf》第6.3小节</li>
+<li>其中<strong>VIEW_DOMAIN</strong>：为接口中返回的预览连接地址，<em>生产环境</em> 需要配置为外网的访问地址（此处为11.199则只能在内网访问）</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line">name=yozo-fcs</span><br><span class="line">dir=/usr/local/yozo/fcs</span><br><span class="line">cId=$(docker ps -a | grep $name | awk &#x27;&#123;print $1&#125;&#x27;)</span><br><span class="line">if [ -n &quot;$cId&quot; ]; then</span><br><span class="line">     echo &quot;$name container id : $cId&quot;</span><br><span class="line">else</span><br><span class="line">     echo &quot;$name init&quot;</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">if [ -n &quot;$cId&quot; ]; then</span><br><span class="line">     sId=$(docker ps | grep $name | awk &#x27;&#123;print $1&#125;&#x27;)</span><br><span class="line">     if [ -n &quot;$sId&quot; ]; then</span><br><span class="line">         echo &quot;stop container id :&quot;</span><br><span class="line">         docker stop $sId</span><br><span class="line">     fi</span><br><span class="line">     echo &quot;rm container id :&quot;</span><br><span class="line">     docker rm $cId</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">echo &quot;restart container&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">取消文件缓存目录映射（发现如果映射到nfs会导致预览变慢）：-v <span class="variable">$dir</span>/docs:/opt/fcs/docs \ </span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-v /usr/local/webserver/nginx/html/eip/upload/weboffice/fcs:/opt/fcs/docs \</span></span><br><span class="line"><span class="language-bash">docker run --name <span class="variable">$name</span> \</span></span><br><span class="line"><span class="language-bash">--restart=always \</span></span><br><span class="line"><span class="language-bash">-v /etc/localtime:/etc/localtime:ro \</span></span><br><span class="line"><span class="language-bash">-v <span class="variable">$dir</span>/conf/fcs.eni:/opt/fcs/tomcat/webapps/ROOT/WEB-INF/classes/fcs.eni \</span></span><br><span class="line"><span class="language-bash">-v <span class="variable">$dir</span>/conf/config.eni:/opt/fcs/tomcat/webapps/ROOT/WEB-INF/classes/jar/dcc/dcsConvert_lib/Config/config.eni \</span></span><br><span class="line"><span class="language-bash">-v <span class="variable">$dir</span>/docs:/opt/fcs/docs \</span></span><br><span class="line"><span class="language-bash">-v <span class="variable">$dir</span>/logs/tomcat:/opt/fcs/tomcat/logs \</span></span><br><span class="line"><span class="language-bash">-v <span class="variable">$dir</span>/logs/fcs:/opt/fcs/logs \</span></span><br><span class="line"><span class="language-bash">-p 18090:18090 \</span></span><br><span class="line"><span class="language-bash">-e <span class="string">&quot;CACHE_MAX_SIZE=100000&quot;</span> \</span></span><br><span class="line"><span class="language-bash">-e <span class="string">&quot;HTTP_PORT=18090&quot;</span> \</span></span><br><span class="line"><span class="language-bash">-e <span class="string">&quot;VIEW_DOMAIN=http://192.168.11.199:18787/fcs/&quot;</span> \      <span class="comment">### 注：此处为比较重要一点*</span></span></span><br><span class="line">-e &quot;REDIS_HOST=192.168.11.199&quot; \</span><br><span class="line">-e &quot;REDIS_PORT=6379&quot; \</span><br><span class="line">-e &quot;REDIS_PASS=654321&quot; \</span><br><span class="line">-e &quot;REDIS_DB=1&quot; \</span><br><span class="line">-d yozo-fcs:0.0.1</span><br></pre></td></tr></table></figure>
+
+<h5 id="Gateway容器化"><a href="#Gateway容器化" class="headerlink" title="Gateway容器化"></a>Gateway容器化</h5><blockquote>
+<p>传送门：<a target="_blank" rel="noopener" href="http://192.168.125.2/group2/yozo-office">网关源码</a>，内含sdk、gateway、app三个模块。</p>
+<ul>
+<li>gateway：为可独立部署的自定义网关</li>
+<li>sdk：为方便业务系统接入的工具包</li>
+<li>app：为接入演示的demo项目</li>
+</ul>
+</blockquote>
+<h6 id="整体目录预览-2"><a href="#整体目录预览-2" class="headerlink" title="整体目录预览"></a>整体目录预览</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-kf2-jyxt2 gateway]# tree /usr/local/yozo/gateway/ -L 2</span><br><span class="line">/usr/local/yozo/gateway/          # 服务所在目录*</span><br><span class="line">├── Dockerfile				### 注：Docker镜像生成脚本**</span><br><span class="line">├── logs				          # 用于映射进容器，作为日志持久化目录 		</span><br><span class="line">│   ├── spring.log</span><br><span class="line">|   └── spring.log.2023-09-11.0.gz</span><br><span class="line">├── resources				### Dockerfile镜像生成需要用到的资料</span><br><span class="line">│   ├── jdk1.8.0_221              # 同上</span><br><span class="line">│   ├── jdk8.sh                   # 同上</span><br><span class="line">│   ├── start.sh            ### 注：我们自己编写的容器内服务启动脚本、后面详解**      </span><br><span class="line">│   └── yozo-gateway.jar          # 源码中gateway模块打包所得</span><br><span class="line">└── restart.sh              ### 注：我们自己编写的容器启动脚本、后面详解**</span><br></pre></td></tr></table></figure>
+
+<h6 id="start-sh-容器脚本-2"><a href="#start-sh-容器脚本-2" class="headerlink" title="start.sh 容器脚本"></a>start.sh 容器脚本</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">使jdk环境变量生效</span></span><br><span class="line">source /etc/profile</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">启动服务</span></span><br><span class="line">java -Djava.security.egd=file:/dev/./urandom -Duser.timezone=GMT+08 -Dfile.encoding=UTF-8 -server -Xverify:none -jar $&#123;jvmoptions&#125; app.jar --spring.profiles.active=$&#123;profile&#125;</span><br></pre></td></tr></table></figure>
+
+<h6 id="Dockerfile-镜像生成档-2"><a href="#Dockerfile-镜像生成档-2" class="headerlink" title="Dockerfile 镜像生成档"></a>Dockerfile 镜像生成档</h6><figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> centos:centos7</span><br><span class="line"><span class="comment"># 作者信息</span></span><br><span class="line"><span class="keyword">MAINTAINER</span> zangh&lt;zangh@ejy365.com&gt;</span><br><span class="line"><span class="comment"># 复制所需软件到镜像</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> resources/jdk1.8.0_221 /opt/gateway/jdk</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> resources/yozo-gateway.jar /opt/gateway/app.jar</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> resources/jdk8.sh /etc/profile.d/jdk8.sh</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> resources/start.sh /opt/gateway/start.sh</span></span><br><span class="line"><span class="comment"># 兼容中文字符</span></span><br><span class="line"><span class="keyword">ENV</span> LANG en_US.UTF-<span class="number">8</span></span><br><span class="line"><span class="comment"># 赋予执行权限</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">chmod</span> -R +x /opt/gateway/jdk/bin</span></span><br><span class="line"><span class="comment"># 工作目录</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="language-bash"> /opt/gateway</span></span><br><span class="line"><span class="comment"># 环境变量</span></span><br><span class="line"><span class="keyword">ENV</span> jvmoptions <span class="string">&quot;&quot;</span></span><br><span class="line"><span class="keyword">ENV</span> profile <span class="string">&quot;dev&quot;</span></span><br><span class="line"><span class="comment"># 暴露端口</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">18787</span></span><br><span class="line"><span class="comment"># 启动服务</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="language-bash"> [<span class="string">&quot;/bin/bash&quot;</span>, <span class="string">&quot;start.sh&quot;</span>]</span></span><br></pre></td></tr></table></figure>
+
+<h6 id="restart-sh-启动脚本-2"><a href="#restart-sh-启动脚本-2" class="headerlink" title="restart.sh 启动脚本"></a>restart.sh 启动脚本</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line">name=yozo-gateway</span><br><span class="line">dir=/usr/local/yozo/gateway</span><br><span class="line">cId=$(docker ps -a | grep $name | awk &#x27;&#123;print $1&#125;&#x27;)</span><br><span class="line"></span><br><span class="line">if [ -n &quot;$cId&quot; ]; then</span><br><span class="line">     echo &quot;$name container id : $cId&quot;</span><br><span class="line">else</span><br><span class="line">     echo &quot;$name init&quot;</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">if [ -n &quot;$cId&quot; ]; then</span><br><span class="line">     sId=$(docker ps | grep $name | awk &#x27;&#123;print $1&#125;&#x27;)</span><br><span class="line">     if [ -n &quot;$sId&quot; ]; then</span><br><span class="line">         echo &quot;stop container id :&quot;</span><br><span class="line">         docker stop $sId</span><br><span class="line">     fi </span><br><span class="line">     echo &quot;rm container id :&quot;</span><br><span class="line">     docker rm $cId</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">echo &quot;restart container&quot;</span><br><span class="line">docker run --name $name \</span><br><span class="line">--restart=always \</span><br><span class="line">-v /etc/localtime:/etc/localtime:ro \</span><br><span class="line">-v $dir/logs:/opt/gateway/logs \</span><br><span class="line">-p 18787:18787 \</span><br><span class="line">-e jvmoptions=&quot;-Xmx1g -Xms1g&quot; \</span><br><span class="line">-e profile=&quot;test&quot; \</span><br><span class="line">-d yozo-gateway:0.0.1</span><br></pre></td></tr></table></figure>
+
+<h4 id="安装服务"><a href="#安装服务" class="headerlink" title="安装服务"></a>安装服务</h4><blockquote>
+<p>前面脚本写好后，所有的镜像生成步骤基本一致（如果遇到问题则反复调整脚本即可）</p>
+</blockquote>
+<h5 id="目录预览"><a href="#目录预览" class="headerlink" title="目录预览"></a>目录预览</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-kf2-jyxt2 yozo]# tree /usr/local/yozo/ -L 1</span><br><span class="line">/usr/local/yozo/               # 上小节所有容器化资料和脚本都在这个下面</span><br><span class="line">├── fcs				### 永中FCS在线预览安装目录</span><br><span class="line">├── gateway         ### 自定义网关安装目录</span><br><span class="line">└── redis           ### Redis服务安装目录</span><br></pre></td></tr></table></figure>
+
+<h5 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h5><h6 id="确保Docker服务正常"><a href="#确保Docker服务正常" class="headerlink" title="确保Docker服务正常"></a>确保Docker服务正常</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-kf2-jyxt2 yozo]# systemctl status docker</span><br><span class="line">● docker.service - Docker Application Container Engine</span><br><span class="line">   Loaded: loaded (/etc/systemd/system/docker.service; enabled; vendor preset: disabled)</span><br><span class="line">   Active: active (running) since 五 2023-08-11 12:26:09 CST; 1 months 2 days ago</span><br><span class="line">     Docs: http://docs.docker.io</span><br><span class="line"> Main PID: 771 (dockerd)</span><br><span class="line">    Tasks: 381</span><br><span class="line">   Memory: 279.9M</span><br><span class="line">   略...</span><br><span class="line"></span><br><span class="line">[root@ejy-kf2-jyxt2 yozo]# docker --version</span><br><span class="line">Docker version 19.03.5, build 633a0ea</span><br><span class="line"></span><br><span class="line">[root@ejy-kf2-jyxt2 yozo]# cat /etc/docker/daemon.json </span><br><span class="line">&#123;</span><br><span class="line">  &quot;registry-mirrors&quot;: [&quot;https://dockerhub.azk8s.cn&quot;, &quot;https://docker.mirrors.ustc.edu.cn&quot;],  #==&gt; 更换镜像加速</span><br><span class="line">  &quot;bip&quot;:&quot;10.17.0.1/24&quot;,</span><br><span class="line">  &quot;max-concurrent-downloads&quot;: 10,</span><br><span class="line">  &quot;log-driver&quot;: &quot;json-file&quot;,</span><br><span class="line">  &quot;log-level&quot;: &quot;warn&quot;,</span><br><span class="line">  &quot;log-opts&quot;: &#123;</span><br><span class="line">    &quot;max-size&quot;: &quot;10m&quot;,</span><br><span class="line">    &quot;max-file&quot;: &quot;3&quot;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;data-root&quot;: &quot;/var/lib/docker&quot;   #==&gt; Docker服务数据所在位置，也可以按需更改</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h6 id="拉取基础镜像"><a href="#拉取基础镜像" class="headerlink" title="拉取基础镜像"></a>拉取基础镜像</h6><p>上述三个镜像都采用centos:centos7作为基础镜像，可以先拉取一下提升后面的构建速度。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-kf2-jyxt2 yozo]# docker pull centos:centos7</span><br><span class="line">centos7: Pulling from library/centos</span><br><span class="line">Digest: sha256:be65f488b7764ad3638f236b7b515b3678369a5124c47b8d32916d6487418ea4</span><br><span class="line">Status: Image is up to date for centos:centos7   #==&gt;我这里本地已经存在了，提示已是最新的了</span><br><span class="line">docker.io/library/centos:centos7</span><br></pre></td></tr></table></figure>
+
+<h5 id="生成镜像"><a href="#生成镜像" class="headerlink" title="生成镜像"></a>生成镜像</h5><h6 id="生成Redis镜像"><a href="#生成Redis镜像" class="headerlink" title="生成Redis镜像"></a>生成Redis镜像</h6><p>镜像名称和版本号：yozo-redis:0.0.1</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-kf2-jyxt2 yozo]# cd redis/</span><br><span class="line">[root@ejy-kf2-jyxt2 yozo]# docker build --help</span><br><span class="line">Usage:  docker build [OPTIONS] PATH | URL | -</span><br><span class="line"></span><br><span class="line">Build an image from a Dockerfile</span><br><span class="line">Options:</span><br><span class="line">略...</span><br><span class="line">  -f, --file string             Name of the Dockerfile (Default is &#x27;PATH/Dockerfile&#x27;)</span><br><span class="line"><span class="meta prompt_">  # </span><span class="language-bash">可以用-f指定Dockerfile文件的路径名</span></span><br><span class="line"><span class="meta prompt_">  # </span><span class="language-bash">也可以不指定而用.表示Docker会在当前目录下查找名为Dockerfile的文件</span></span><br><span class="line">      --force-rm                Always remove intermediate containers</span><br><span class="line">      --iidfile string          Write the image ID to the file</span><br><span class="line">      --isolation string        Container isolation technology</span><br><span class="line">      --label list              Set metadata for an image</span><br><span class="line">略...</span><br><span class="line">  -t, --tag list                Name and optionally a tag in the &#x27;name:tag&#x27; format</span><br><span class="line"><span class="meta prompt_">  # </span><span class="language-bash">指定需要生成的镜像名称，格式为name:tag（tag不指定则默认为latest）</span></span><br><span class="line">      --target string           Set the target build stage to build.</span><br><span class="line">      --ulimit ulimit           Ulimit options (default [])</span><br><span class="line">[root@ejy-kf2-jyxt2 redis]# docker build -t yozo-redis:0.0.1 .</span><br><span class="line">[root@ejy-kf2-jyxt2 redis]# docker images</span><br><span class="line">REPOSITORY    TAG       IMAGE ID        CREATED             SIZE</span><br><span class="line">yozo-redis    0.0.1     a5acbb3641dd    44 hours ago        221MB</span><br><span class="line">centos        centos7   eeb6ee3f44bd    24 months ago       204MB</span><br></pre></td></tr></table></figure>
+
+<h6 id="生成FCS镜像"><a href="#生成FCS镜像" class="headerlink" title="生成FCS镜像"></a>生成FCS镜像</h6><p>步骤同上</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-kf2-jyxt2 yozo]# cd fcs/</span><br><span class="line">[root@ejy-kf2-jyxt2 redis]# docker build -t yozo-fcs:0.0.1 .</span><br><span class="line">略...</span><br><span class="line">[root@ejy-kf2-jyxt2 redis]# docker images</span><br><span class="line">REPOSITORY    TAG       IMAGE ID        CREATED             SIZE</span><br><span class="line">yozo-fcs      0.0.1     9fde45a17e64    37 hours ago        2.32GB</span><br><span class="line">yozo-redis    0.0.1     a5acbb3641dd    44 hours ago        221MB</span><br><span class="line">centos        centos7   eeb6ee3f44bd    24 months ago       204MB</span><br></pre></td></tr></table></figure>
+
+<h6 id="生成gateway镜像"><a href="#生成gateway镜像" class="headerlink" title="生成gateway镜像"></a>生成gateway镜像</h6><p>步骤同上</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-kf2-jyxt2 yozo]# cd gateway/</span><br><span class="line">[root@ejy-kf2-jyxt2 redis]# docker build -t yozo-gateway:0.0.1 .</span><br><span class="line">略...</span><br><span class="line">[root@ejy-kf2-jyxt2 redis]# docker images</span><br><span class="line">REPOSITORY    TAG       IMAGE ID        CREATED             SIZE</span><br><span class="line">yozo-gateway  0.0.1     a797042b7d1f    42 hours ago        645MB</span><br><span class="line">yozo-fcs      0.0.1     9fde45a17e64    37 hours ago        2.32GB</span><br><span class="line">yozo-redis    0.0.1     a5acbb3641dd    44 hours ago        221MB</span><br><span class="line">centos        centos7   eeb6ee3f44bd    24 months ago       204MB</span><br></pre></td></tr></table></figure>
+
+<h5 id="运行服务"><a href="#运行服务" class="headerlink" title="运行服务"></a>运行服务</h5><blockquote>
+<p>一次运行Redis、FCS、gateway服务，依赖关系在应用篇中再做介绍。</p>
+</blockquote>
+<h6 id="启动Redis服务"><a href="#启动Redis服务" class="headerlink" title="启动Redis服务"></a>启动Redis服务</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-kf2-jyxt2 yozo]# cd redis/</span><br><span class="line">[root@ejy-kf2-jyxt2 redis]# sh restart.sh </span><br><span class="line">yozo-redis container id : 0e3afd8433af</span><br><span class="line">stop container id :</span><br><span class="line">0e3afd8433af</span><br><span class="line">rm container id :</span><br><span class="line">0e3afd8433af</span><br><span class="line">restart container</span><br><span class="line">8f83107ee7557b454867a174b9d32fe74490faf78e30c23f50da5d396188bd1f</span><br></pre></td></tr></table></figure>
+
+<h6 id="启动FCS服务"><a href="#启动FCS服务" class="headerlink" title="启动FCS服务"></a>启动FCS服务</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-kf2-jyxt2 yozo]# cd fcs/</span><br><span class="line">[root@ejy-kf2-jyxt2 fcs]# sh restart.sh </span><br></pre></td></tr></table></figure>
+
+<h6 id="启动gateway服务"><a href="#启动gateway服务" class="headerlink" title="启动gateway服务"></a>启动gateway服务</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-kf2-jyxt2 yozo]# cd gateway/</span><br><span class="line">[root@ejy-kf2-jyxt2 gateway]# sh restart.sh </span><br></pre></td></tr></table></figure>
+
+<h4 id="服务验证"><a href="#服务验证" class="headerlink" title="服务验证"></a>服务验证</h4><h5 id="直接访问fcs服务（内网）"><a href="#直接访问fcs服务（内网）" class="headerlink" title="直接访问fcs服务（内网）"></a>直接访问fcs服务（内网）</h5><h6 id="服务版本"><a href="#服务版本" class="headerlink" title="服务版本"></a>服务版本</h6><p><img data-src="http://42.192.155.41/yozo/fcs/20230913105256.png" alt="查看在线预览的版本"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://192.168.11.199:18090/query/version">打开查看</a></li>
+</ul>
+<h6 id="接口文档"><a href="#接口文档" class="headerlink" title="接口文档"></a>接口文档</h6><p><img data-src="http://42.192.155.41/yozo/fcs/20230913105404.png" alt="查看在线预览的版本"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://192.168.11.199:18090/swagger-ui/index.html">打开查看</a></li>
+</ul>
+<h5 id="经过gateway网关访问"><a href="#经过gateway网关访问" class="headerlink" title="经过gateway网关访问"></a>经过gateway网关访问</h5><blockquote>
+<p>18787为gateway的服务接口，fcs为路由键；配置在应用篇中再做介绍。</p>
+</blockquote>
+<h6 id="服务版本-1"><a href="#服务版本-1" class="headerlink" title="服务版本"></a>服务版本</h6><p><img data-src="http://42.192.155.41/yozo/fcs/20230913105513.png" alt="查看在线预览的版本"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://192.168.11.199:18787/fcs/query/version">打开查看</a></li>
+</ul>
+<h6 id="接口文档-1"><a href="#接口文档-1" class="headerlink" title="接口文档"></a>接口文档</h6><p><img data-src="http://42.192.155.41/yozo/fcs/20230913105544.png" alt="查看在线预览的版本"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://192.168.11.199:18787/fcs/swagger-ui/index.html">打开查看</a></li>
+</ul>
+<h3 id="WebOffice部署"><a href="#WebOffice部署" class="headerlink" title="WebOffice部署"></a>WebOffice部署</h3><blockquote>
+<p>注：由于此服务的授权认证会检查采集 <strong>裸机固件号</strong> 或 <strong>Docker的容器id</strong> 导致无法容器化部署，导致部署相对繁琐。</p>
+</blockquote>
+<h4 id="环境要求-1"><a href="#环境要求-1" class="headerlink" title="环境要求"></a>环境要求</h4><h5 id="推荐配置"><a href="#推荐配置" class="headerlink" title="推荐配置"></a>推荐配置</h5><table>
+<thead>
+<tr>
+<th align="center">操作系统</th>
+<th align="center">推荐类型</th>
+<th align="center">内存</th>
+<th align="center">CPU</th>
+<th align="center">机器数量</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">CentOS7.2 及以上</td>
+<td align="center">X86服务器</td>
+<td align="center">16G 及以上</td>
+<td align="center">8核及以上</td>
+<td align="center">1台及以上</td>
+</tr>
+</tbody></table>
+<h5 id="服务器节点-1"><a href="#服务器节点-1" class="headerlink" title="服务器节点"></a>服务器节点</h5><table>
+<thead>
+<tr>
+<th align="center">主机名</th>
+<th align="center">操作系统</th>
+<th align="center">网络IP</th>
+<th align="center">硬件配置</th>
+<th align="center">预装软件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">ejy-ys-kf2-web</td>
+<td align="center">CentOS Linux release 7.5.1804 (Core)</td>
+<td align="center">192.168.11.20</td>
+<td align="center">8c32g-500g</td>
+<td align="center">gcc、unzip</td>
+</tr>
+</tbody></table>
+<h5 id="工具安装"><a href="#工具安装" class="headerlink" title="工具安装"></a>工具安装</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">主要用于后续安装专用的redis服务（本地化编译）</span></span><br><span class="line">[root@ejy-ys-kf2-web weboffice]# yum -y install gcc gcc-c++ autoconf make</span><br><span class="line">[root@ejy-ys-kf2-web weboffice]# gcc -v</span><br><span class="line">Using built-in specs.</span><br><span class="line">COLLECT_GCC=gcc</span><br><span class="line">COLLECT_LTO_WRAPPER=/usr/libexec/gcc/x86_64-redhat-linux/4.8.5/lto-wrapper</span><br><span class="line">Target: x86_64-redhat-linux</span><br><span class="line">Configured with: ../configure --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --with-</span><br><span class="line">略...</span><br><span class="line">gcc version 4.8.5 20150623 (Red Hat 4.8.5-44) (GCC)</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">主要用于解压web_office.zip安装包</span></span><br><span class="line">[root@edit bin]# yum install -y unzip.x86_64</span><br></pre></td></tr></table></figure>
+
+<h4 id="部署资料-1"><a href="#部署资料-1" class="headerlink" title="部署资料"></a>部署资料</h4><ol>
+<li><a target="_blank" rel="noopener" href="http://42.192.155.41/yozo/wo/weboffice3.3.5.0019-month.zip">weboffice3.3.5.0019-month.zip</a>（服务商提供的最新版本）</li>
+<li><a target="_blank" rel="noopener" href="http://42.192.155.41/yozo/wo/YZSY202309128-%E6%B1%9F%E8%8B%8F%E6%98%93%E4%BA%A4%E6%98%93%E4%BF%A1%E6%81%AF%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8-WO%E4%B8%B4%E6%97%B6%E6%8E%88%E6%9D%83.eni">YZSY202309128-江苏易交易信息科技有限公司-WO临时授权.eni</a>（服务商提供的授权文件）</li>
+<li>fonts.rar（中文字体库）</li>
+</ol>
+<h4 id="部署步骤"><a href="#部署步骤" class="headerlink" title="部署步骤"></a>部署步骤</h4><blockquote>
+<p>具体的安装细节和配置修改细节参考以下文档：</p>
+<ol>
+<li><a target="_blank" rel="noopener" href="http://42.192.155.41/yozo/wo/1_WebOffice%E9%83%A8%E7%BD%B2%E6%95%99%E7%A8%8B.docx">《1_WebOffice部署教程.docx》</a></li>
+<li><a target="_blank" rel="noopener" href="http://42.192.155.41/yozo/wo/1_WebOffice%E5%9F%BA%E6%9C%AC%E8%BF%90%E7%BB%B4%E6%89%8B%E5%86%8C.docx">《1_WebOffice基本运维手册.docx》</a></li>
+</ol>
+</blockquote>
+<h5 id="解压并修改配置"><a href="#解压并修改配置" class="headerlink" title="解压并修改配置"></a>解压并修改配置</h5><h6 id="解压安装目录"><a href="#解压安装目录" class="headerlink" title="解压安装目录"></a>解压安装目录</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-ys-kf2-web yozo]# mkdir -p /usr/local/yozo/weboffice</span><br><span class="line">[root@ejy-ys-kf2-web yozo]# unzip weboffice3.3.5.0019-month.zip -d weboffice</span><br><span class="line">[root@ejy-ys-kf2-web yozo]# tree weboffice/ -L 2</span><br><span class="line">weboffice</span><br><span class="line">├── bin</span><br><span class="line">│   ├── checkWO.sh</span><br><span class="line">│   ├── config.sh</span><br><span class="line">│   ├── deploy.sh</span><br><span class="line">│   ├── dump.rdb</span><br><span class="line">│   ├── install_Config                  ## 全局配置文件</span><br><span class="line">│   ├── install.sh                      ## 安装脚本</span><br><span class="line">│   ├── nohup.out</span><br><span class="line">│   ├── protect.sh</span><br><span class="line">│   ├── README.txt</span><br><span class="line">│   ├── redisUp.sh</span><br><span class="line">│   ├── tomcatlog.sh</span><br><span class="line">│   ├── uninstall.sh</span><br><span class="line">│   ├── update</span><br><span class="line">│   ├── update.sh</span><br><span class="line">│   └── weboffice.sh</span><br><span class="line">├── README</span><br><span class="line">│   ├── pluginDemo_2021_03_01.zip</span><br><span class="line">│   ├── READ_ME.docx</span><br><span class="line">│   ├── Tomcat按天生成中间件日志操作手册.docx</span><br><span class="line">│   ├── ~$前端插件.docx</span><br><span class="line">│   └── 前端插件.docx</span><br><span class="line">├── ReadMe.txt</span><br><span class="line">├── res</span><br><span class="line">│   ├── __conf</span><br><span class="line">│   ├── repo</span><br><span class="line">│   └── res</span><br><span class="line">└── web_office.zip</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment">## 清理不必要的目录和文件</span></span></span><br><span class="line">[root@ejy-ys-kf2-web yozo]# rm -rf weboffice/README weboffice/ReadMe.txt</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment">## 创建必要目录，配置中要用</span></span></span><br><span class="line">[root@ejy-ys-kf2-web yozo]# mkdir -p weboffice/logs weboffice/docs</span><br></pre></td></tr></table></figure>
+
+<h6 id="重要文件说明"><a href="#重要文件说明" class="headerlink" title="重要文件说明"></a>重要文件说明</h6><blockquote>
+<p>配置修改参考《1_WebOffice部署教程.docx》第3、6小节，大致的文件作用如下：</p>
+<ol>
+<li>bin&#x2F;install_Config 全局配置文件</li>
+<li>bin&#x2F;install.sh 总安装脚本，其它的如deploy.sh、config.sh、redisUp.sh等脚本都由此脚本调用</li>
+<li>bin&#x2F;uninstall.sh 卸载脚本</li>
+<li>bin&#x2F;protect.sh 保护进程脚本（定期检查weboffice的进程是否正常，如不正常则重启之）</li>
+<li>web_office.zip 所有的服务程序都在此包中，由install.sh脚本负责自动化解压和部署</li>
+</ol>
+</blockquote>
+<h6 id="初步修改配置"><a href="#初步修改配置" class="headerlink" title="初步修改配置"></a>初步修改配置</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-ys-kf2-web yozo]# cd bin &amp;&amp; vim install_Config</span><br><span class="line">...</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">项目的部署目录(不配置则自动获取当前目录位置)</span></span><br><span class="line">webofficePath=/usr/local/yozo/weboffice           ## ----&gt; 修改点1</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">项目的部署服务器(不配置则自动获取本机第一个ip)</span></span><br><span class="line">hostIP=192.168.11.20                              ## ----&gt; 修改点2</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">需要部署的weboffice项目数量(不填则工具服务器配置分配数量)</span></span><br><span class="line">wonum=5                                           ## ----&gt; 修改点3</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">每个weboffice项目的内存大小(单位M)</span></span><br><span class="line">tomcatsize=4096                                   ## ----&gt; 修改点4</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">demo项目的http端口即weboffice项目的访问端口</span></span><br><span class="line">demo_httpPort=19090                               ## ----&gt; 修改点5</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">weboffice项目的起始server端口(默认会在配置的端口后面进行数学运算加1 如：配置8000则tomcat端口变为8001.8002....)</span></span><br><span class="line">wo_serverPort=18000</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">weboffice项目的起始http端口(默认会在配置的端口后面进行数学运算加1 如：配置8000则tomcat端口变为8001.8002....)</span></span><br><span class="line">wo_httpPort=18080</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">weboffice项目的起始conecter端口(默认会在配置的端口后面进行数学运算加1 如：配置8000则tomcat端口变为8001.8002....)</span></span><br><span class="line">wo_connectorPort=18800</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">websocket的初始端口(默认会在配置的端口后面进行数学运算加1 如：配置9940则websocket端口变为9941.9942....)</span></span><br><span class="line">websocketport=19940</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">jdk(可以配置客户自己的jdk路径)</span></span><br><span class="line">javaPath=/usr/local/yozo/weboffice/jdk1.8.0_161  ## ----&gt; 修改点6</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">文件路径</span></span><br><span class="line">filepath=/usr/local/yozo/weboffice/docs          ## ----&gt; 修改点7</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">日志路径</span></span><br><span class="line">logpath=/usr/local/yozo/weboffice/logs           ## ----&gt; 修改点8</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">agent端口</span></span><br><span class="line">agentport=18080                                  ## ----&gt; 修改点9（很重要的配置，服务方用golang写的代理服务）</span><br><span class="line">												 ##       负责服务节点的反向代理和负载均衡</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">redis密码(不填则不设置密码)</span></span><br><span class="line">redisPass=Yozo2022                               ## ----&gt; 修改点10，Yozo2022为默认密码</span><br><span class="line">                                                 ##       如果和fcs部署在同一台服务器上，则共用redis服务</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">mysql数据库安装地址            &gt;&gt;&gt;&gt;&gt; 不用管，weboffice没用到mysql服务为，以下不需要修改</span></span><br><span class="line">mysqlIp=172.18.21.4</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">mysql端口</span></span><br><span class="line">mysqlPort=3306</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">mysql密码(不填则默认没有密码)</span></span><br><span class="line">mysqlPass=123456</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h6 id="安装字体库"><a href="#安装字体库" class="headerlink" title="安装字体库"></a>安装字体库</h6><blockquote>
+<p>参考：《1_WebOffice基本运维手册.docx》第4章节</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-ys-kf2-web yozo]# makedir -p /usr/share/fonts/truetype</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 解压fonts.rar到此目录下</span></span></span><br></pre></td></tr></table></figure>
+
+<h5 id="获取并更新授权文件"><a href="#获取并更新授权文件" class="headerlink" title="获取并更新授权文件"></a>获取并更新授权文件</h5><blockquote>
+<p>参考：《1_WebOffice部署教程.docx》第4小节、《1_WebOffice基本运维手册.docx》第三章节</p>
+</blockquote>
+<h6 id="生成机器码"><a href="#生成机器码" class="headerlink" title="生成机器码"></a>生成机器码</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-ys-kf2-web yozo]# cd weboffice/bin &amp;&amp; ./install.sh</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 如果第一次安装会编译安装redis服务，过程可能会较慢</span></span></span><br><span class="line">[root@ejy-ys-kf2-web bin]# tree /usr/local/yozo/weboffice/ -L 1</span><br><span class="line">/usr/local/yozo/weboffice/</span><br><span class="line">├── agent</span><br><span class="line">├── bin</span><br><span class="line">├── jdk1.8.0_161</span><br><span class="line">├── logs</span><br><span class="line">├── redis-6.2.6</span><br><span class="line">├── res</span><br><span class="line">├── weboffice_1</span><br><span class="line">├── weboffice_2</span><br><span class="line">├── weboffice_3</span><br><span class="line">├── weboffice_4</span><br><span class="line">├── weboffice_5</span><br><span class="line">├── weboffice_demo</span><br><span class="line">└── web_office.zip</span><br><span class="line">[root@ejy-ys-kf2-web bin]# cd ../weboffice_1/webapps/ROOT/WEB-INF/lib/</span><br><span class="line">[root@ejy-ys-kf2-web bin]# /usr/local/yozo/weboffice/jdk1.8.0_161/bin/java -jar Register.jar </span><br><span class="line">[root@ejy-ys-kf2-web bin]# ll | grep register.txt</span><br><span class="line">-rw-r--r-- 1 root root       81 9月  13 14:52 register.txt</span><br></pre></td></tr></table></figure>
+
+<h6 id="获取授权文件"><a href="#获取授权文件" class="headerlink" title="获取授权文件"></a>获取授权文件</h6><blockquote>
+<p>把上述的register.txt文件交给服务提供商换取*.eni授权文件</p>
+</blockquote>
+<p>此处我们拿到了临时授权文件：YZSY202309128-江苏易交易信息科技有限公司-WO临时授权.eni</p>
+<h6 id="替换授权文件"><a href="#替换授权文件" class="headerlink" title="替换授权文件"></a>替换授权文件</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-ys-kf2-web bin]# ll update/conf/</span><br><span class="line">-rwxr-xr-x 1 root root    37102 3月  15 20:16 fileManagement.jar</span><br><span class="line">-rwxr-xr-x 1 root root   446748 3月  15 20:16 legoMenu.eni</span><br><span class="line">-rwxr-xr-x 1 root root      196 9月  12 16:05 webConfig.eni       ## --&gt; 用零时授权文件替换webConfig.eni</span><br><span class="line">-rwxr-xr-x 1 root root 58329340 3月  15 20:16 Yozo_Office.jar</span><br><span class="line">[root@ejy-ys-kf2-web bin]# chmod 755 update/conf/webConfig.eni</span><br></pre></td></tr></table></figure>
+
+<h6 id="更新服务"><a href="#更新服务" class="headerlink" title="更新服务"></a>更新服务</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-ys-kf2-web bin]# ./update.sh</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 或</span></span></span><br><span class="line">[root@ejy-ys-kf2-web bin]# ./uninstall.sh &amp;&amp; ./install.sh</span><br><span class="line">[root@ejy-ys-kf2-web bin]# netstat -tunpl | grep java</span><br><span class="line">tcp        0      0 0.0.0.0:18081           0.0.0.0:*               LISTEN      27948/java          </span><br><span class="line">tcp        0      0 0.0.0.0:18082           0.0.0.0:*               LISTEN      27969/java          </span><br><span class="line">tcp        0      0 0.0.0.0:18083           0.0.0.0:*               LISTEN      27991/java          </span><br><span class="line">tcp        0      0 0.0.0.0:18084           0.0.0.0:*               LISTEN      28015/java          </span><br><span class="line">tcp        0      0 0.0.0.0:19941           0.0.0.0:*               LISTEN      27948/java          </span><br><span class="line">tcp        0      0 0.0.0.0:18085           0.0.0.0:*               LISTEN      28048/java          </span><br><span class="line">tcp        0      0 0.0.0.0:19942           0.0.0.0:*               LISTEN      27969/java          </span><br><span class="line">tcp        0      0 0.0.0.0:19943           0.0.0.0:*               LISTEN      27991/java          </span><br><span class="line">tcp        0      0 0.0.0.0:19944           0.0.0.0:*               LISTEN      28015/java          </span><br><span class="line">tcp        0      0 0.0.0.0:19945           0.0.0.0:*               LISTEN      28048/java          </span><br><span class="line">tcp        0      0 127.0.0.1:18001         0.0.0.0:*               LISTEN      27948/java          </span><br><span class="line">tcp        0      0 127.0.0.1:18002         0.0.0.0:*               LISTEN      27969/java          </span><br><span class="line">tcp        0      0 0.0.0.0:19090           0.0.0.0:*               LISTEN      28089/java          </span><br><span class="line">tcp        0      0 127.0.0.1:18003         0.0.0.0:*               LISTEN      27991/java          </span><br><span class="line">tcp        0      0 127.0.0.1:18004         0.0.0.0:*               LISTEN      28015/java                  </span><br><span class="line">tcp        0      0 127.0.0.1:18005         0.0.0.0:*               LISTEN      28048/java          </span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>查看日志：tail -f &#x2F;usr&#x2F;local&#x2F;yozo&#x2F;weboffice&#x2F;agent&#x2F;nohup.out，出现以下红框中日志说明agent代理启动成功，监听18080端口</li>
+</ul>
+<p><img data-src="http://42.192.155.41/yozo/wo/20230913151200.png" alt="代理服务日志"></p>
+<h5 id="运行及服务维护"><a href="#运行及服务维护" class="headerlink" title="运行及服务维护"></a>运行及服务维护</h5><blockquote>
+<p>参考：《1_WebOffice部署教程.docx》第5小结、《1_WebOffice基本运维手册.docx》第五、六、七章节</p>
+</blockquote>
+<h6 id="启动保护进程"><a href="#启动保护进程" class="headerlink" title="启动保护进程"></a>启动保护进程</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@ejy-ys-kf2-web bin]# ./protect.sh start</span><br><span class="line">nohup: 把输出追加到&quot;nohup.out&quot;</span><br><span class="line">start protecy weboffice success...</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 查看保护进程是否存在，具体逻辑就是启动一个循环脚本不断检查指定端口</span></span></span><br><span class="line">[root@ejy-ys-kf2-web bin]# ps -ef | grep checkWO.sh | grep -v grep</span><br><span class="line">root     12553     1  0 15:18 pts/0    00:00:00 sh checkWO.sh</span><br></pre></td></tr></table></figure>
+
+<h4 id="服务验证-1"><a href="#服务验证-1" class="headerlink" title="服务验证"></a>服务验证</h4><h5 id="直接访问weboffice服务"><a href="#直接访问weboffice服务" class="headerlink" title="直接访问weboffice服务"></a>直接访问weboffice服务</h5><h6 id="官方给的demo示例"><a href="#官方给的demo示例" class="headerlink" title="官方给的demo示例"></a>官方给的demo示例</h6><p><img data-src="http://42.192.155.41/yozo/wo/20230913152721.png" alt="官方demo演示项目"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://192.168.11.20:19090/">打开查看</a></li>
+</ul>
+<h6 id="官方开发文档"><a href="#官方开发文档" class="headerlink" title="官方开发文档"></a>官方开发文档</h6><ul>
+<li>开发需以此为准，给的开发文档<del><a target="_blank" rel="noopener" href="http://42.192.155.41/yozo/wo/%E6%B0%B8%E4%B8%ADWebOffice3.3%E6%8E%A5%E5%8F%A3%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3-%E5%90%8E%E7%AB%AF.docx">《永中WebOffice3.3接口说明文档-后端.docx》</a></del>不一定准确。</li>
+</ul>
+<p><img data-src="http://42.192.155.41/yozo/wo/20230913152748.png" alt="官方开发文档"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://192.168.11.20:18080/s/help.html">打开查看</a></li>
+</ul>
+<h5 id="经过gateway网关访问-1"><a href="#经过gateway网关访问-1" class="headerlink" title="经过gateway网关访问"></a>经过gateway网关访问</h5><h6 id="官方给的demo示例-1"><a href="#官方给的demo示例-1" class="headerlink" title="官方给的demo示例"></a>官方给的demo示例</h6><p><img data-src="http://42.192.155.41/yozo/wo/20230913153155.png" alt="官方demo演示项目"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://192.168.11.199:18787/wo-demo/">打开查看</a></li>
+</ul>
+<h6 id="官方开发文档-1"><a href="#官方开发文档-1" class="headerlink" title="官方开发文档"></a>官方开发文档</h6><p><img data-src="http://42.192.155.41/yozo/wo/20230913153222.png" alt="官方开发文档"></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://192.168.11.199:18787/wo/s/help.html">打开查看</a></li>
+</ul>
+<h3 id="部署总结"><a href="#部署总结" class="headerlink" title="部署总结"></a>部署总结</h3><h4 id="便捷性"><a href="#便捷性" class="headerlink" title="便捷性"></a>便捷性</h4><h5 id="FCS服务"><a href="#FCS服务" class="headerlink" title="FCS服务"></a>FCS服务</h5><p>容器化后部署便利。</p>
+<h5 id="WebOffice服务"><a href="#WebOffice服务" class="headerlink" title="WebOffice服务"></a>WebOffice服务</h5><p>费时费力，迁移成本高。</p>
+<h4 id="高可用（HA）"><a href="#高可用（HA）" class="headerlink" title="高可用（HA）"></a>高可用（HA）</h4><h5 id="FCS服务-1"><a href="#FCS服务-1" class="headerlink" title="FCS服务"></a>FCS服务</h5><p>业务逻辑简单（本质上是一个文件格式转换服务），且使用redis作为存储器；且实现了容器化，很容易就能做到集群化的横向伸缩性部署。</p>
+<h5 id="WebOffice服务-1"><a href="#WebOffice服务-1" class="headerlink" title="WebOffice服务"></a>WebOffice服务</h5><p>由于证书的认证逻辑暂无法容器化部署，且官方提供的原生部署方案，只能部署在单台服务器上。</p>
+<p>尽管通过protect.sh保护程序尽力保证了多个weboffice服务可用，agent也还是存在单点问题。</p>
+<h4 id="安全性"><a href="#安全性" class="headerlink" title="安全性"></a>安全性</h4><h5 id="链路信道安全（https）"><a href="#链路信道安全（https）" class="headerlink" title="链路信道安全（https）"></a>链路信道安全（https）</h5><blockquote>
+<p>一般由企业级的nginx反向代理配置ssl安全层，服务层不配置。</p>
+</blockquote>
+<h5 id="防盗链"><a href="#防盗链" class="headerlink" title="防盗链"></a>防盗链</h5><h6 id="检查http头部的referer字段"><a href="#检查http头部的referer字段" class="headerlink" title="检查http头部的referer字段"></a>检查http头部的referer字段</h6><h6 id="业务回调接口检查"><a href="#业务回调接口检查" class="headerlink" title="业务回调接口检查"></a>业务回调接口检查</h6><p>文档《1WebOffice_Help页面API_说明文档(后端仅api.do.docx》第3.2小节有说明，但是没找到配置的地方？！！</p>
+<h5 id="不落地文档"><a href="#不落地文档" class="headerlink" title="不落地文档"></a>不落地文档</h5><p>永中WebOffice支持打开不落地文档（即文档不会保存回到WebOffice服务所在的服务器上），WebOffice会获取用户提供的文档的文件流，后续对于该文档的一切操作都在内存中进行，不会存放到硬盘上，最终编辑结束后会将最新的文件流回传给客户服务器，为机密文档提供了安全保证。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E7%AC%94%E8%AE%B0/" rel="tag"><i class="fa fa-tag"></i> 笔记</a>
+              <a href="/tags/%E9%83%A8%E7%BD%B2/" rel="tag"><i class="fa fa-tag"></i> 部署</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/09/08/distributed-tx/" rel="prev" title="分布式事务">
+      <i class="fa fa-chevron-left"></i> 分布式事务
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/09/12/weboffice-yozo-notes/" rel="next" title="永中在线文档应用">
+      永中在线文档应用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+  </div>
+  
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">服务简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FCS%EF%BC%88%E9%AB%98%E7%BA%A7%E7%89%88%EF%BC%89%E9%83%A8%E7%BD%B2"><span class="nav-number">2.</span> <span class="nav-text">FCS（高级版）部署</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E8%A6%81%E6%B1%82"><span class="nav-number">2.1.</span> <span class="nav-text">环境要求</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%8E%A8%E8%8D%90%E7%8E%AF%E5%A2%83"><span class="nav-number">2.1.1.</span> <span class="nav-text">推荐环境</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%8A%82%E7%82%B9"><span class="nav-number">2.1.2.</span> <span class="nav-text">服务器节点</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E8%B5%84%E6%96%99"><span class="nav-number">2.2.</span> <span class="nav-text">部署资料</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E8%84%9A%E6%9C%AC"><span class="nav-number">2.3.</span> <span class="nav-text">部署脚本</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Redis%E5%AE%B9%E5%99%A8%E5%8C%96"><span class="nav-number">2.3.1.</span> <span class="nav-text">Redis容器化</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E7%9B%AE%E5%BD%95%E9%A2%84%E8%A7%88"><span class="nav-number">2.3.1.1.</span> <span class="nav-text">整体目录预览</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#start-sh-%E5%AE%B9%E5%99%A8%E8%84%9A%E6%9C%AC"><span class="nav-number">2.3.1.2.</span> <span class="nav-text">start.sh 容器脚本</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#Dockerfile-%E9%95%9C%E5%83%8F%E7%94%9F%E6%88%90%E6%A1%A3"><span class="nav-number">2.3.1.3.</span> <span class="nav-text">Dockerfile 镜像生成档</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#restart-sh-%E5%90%AF%E5%8A%A8%E8%84%9A%E6%9C%AC"><span class="nav-number">2.3.1.4.</span> <span class="nav-text">restart.sh 启动脚本</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#FCS%E5%AE%B9%E5%99%A8%E5%8C%96"><span class="nav-number">2.3.2.</span> <span class="nav-text">FCS容器化</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E7%9B%AE%E5%BD%95%E9%A2%84%E8%A7%88-1"><span class="nav-number">2.3.2.1.</span> <span class="nav-text">整体目录预览</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#jdk8-sh-%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="nav-number">2.3.2.2.</span> <span class="nav-text">jdk8.sh 环境配置</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#start-sh-%E5%AE%B9%E5%99%A8%E8%84%9A%E6%9C%AC-1"><span class="nav-number">2.3.2.3.</span> <span class="nav-text">start.sh 容器脚本</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#Dockerfile-%E9%95%9C%E5%83%8F%E7%94%9F%E6%88%90%E6%A1%A3-1"><span class="nav-number">2.3.2.4.</span> <span class="nav-text">Dockerfile 镜像生成档</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#restart-sh-%E5%90%AF%E5%8A%A8%E8%84%9A%E6%9C%AC-1"><span class="nav-number">2.3.2.5.</span> <span class="nav-text">restart.sh 启动脚本</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Gateway%E5%AE%B9%E5%99%A8%E5%8C%96"><span class="nav-number">2.3.3.</span> <span class="nav-text">Gateway容器化</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E7%9B%AE%E5%BD%95%E9%A2%84%E8%A7%88-2"><span class="nav-number">2.3.3.1.</span> <span class="nav-text">整体目录预览</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#start-sh-%E5%AE%B9%E5%99%A8%E8%84%9A%E6%9C%AC-2"><span class="nav-number">2.3.3.2.</span> <span class="nav-text">start.sh 容器脚本</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#Dockerfile-%E9%95%9C%E5%83%8F%E7%94%9F%E6%88%90%E6%A1%A3-2"><span class="nav-number">2.3.3.3.</span> <span class="nav-text">Dockerfile 镜像生成档</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#restart-sh-%E5%90%AF%E5%8A%A8%E8%84%9A%E6%9C%AC-2"><span class="nav-number">2.3.3.4.</span> <span class="nav-text">restart.sh 启动脚本</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E6%9C%8D%E5%8A%A1"><span class="nav-number">2.4.</span> <span class="nav-text">安装服务</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%9B%AE%E5%BD%95%E9%A2%84%E8%A7%88"><span class="nav-number">2.4.1.</span> <span class="nav-text">目录预览</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%89%8D%E6%9C%9F%E5%87%86%E5%A4%87"><span class="nav-number">2.4.2.</span> <span class="nav-text">前期准备</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%A1%AE%E4%BF%9DDocker%E6%9C%8D%E5%8A%A1%E6%AD%A3%E5%B8%B8"><span class="nav-number">2.4.2.1.</span> <span class="nav-text">确保Docker服务正常</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%8B%89%E5%8F%96%E5%9F%BA%E7%A1%80%E9%95%9C%E5%83%8F"><span class="nav-number">2.4.2.2.</span> <span class="nav-text">拉取基础镜像</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E9%95%9C%E5%83%8F"><span class="nav-number">2.4.3.</span> <span class="nav-text">生成镜像</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%94%9F%E6%88%90Redis%E9%95%9C%E5%83%8F"><span class="nav-number">2.4.3.1.</span> <span class="nav-text">生成Redis镜像</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%94%9F%E6%88%90FCS%E9%95%9C%E5%83%8F"><span class="nav-number">2.4.3.2.</span> <span class="nav-text">生成FCS镜像</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%94%9F%E6%88%90gateway%E9%95%9C%E5%83%8F"><span class="nav-number">2.4.3.3.</span> <span class="nav-text">生成gateway镜像</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E6%9C%8D%E5%8A%A1"><span class="nav-number">2.4.4.</span> <span class="nav-text">运行服务</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8Redis%E6%9C%8D%E5%8A%A1"><span class="nav-number">2.4.4.1.</span> <span class="nav-text">启动Redis服务</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8FCS%E6%9C%8D%E5%8A%A1"><span class="nav-number">2.4.4.2.</span> <span class="nav-text">启动FCS服务</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8gateway%E6%9C%8D%E5%8A%A1"><span class="nav-number">2.4.4.3.</span> <span class="nav-text">启动gateway服务</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E9%AA%8C%E8%AF%81"><span class="nav-number">2.5.</span> <span class="nav-text">服务验证</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E8%AE%BF%E9%97%AEfcs%E6%9C%8D%E5%8A%A1%EF%BC%88%E5%86%85%E7%BD%91%EF%BC%89"><span class="nav-number">2.5.1.</span> <span class="nav-text">直接访问fcs服务（内网）</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%89%88%E6%9C%AC"><span class="nav-number">2.5.1.1.</span> <span class="nav-text">服务版本</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%8E%A5%E5%8F%A3%E6%96%87%E6%A1%A3"><span class="nav-number">2.5.1.2.</span> <span class="nav-text">接口文档</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BB%8F%E8%BF%87gateway%E7%BD%91%E5%85%B3%E8%AE%BF%E9%97%AE"><span class="nav-number">2.5.2.</span> <span class="nav-text">经过gateway网关访问</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%89%88%E6%9C%AC-1"><span class="nav-number">2.5.2.1.</span> <span class="nav-text">服务版本</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%8E%A5%E5%8F%A3%E6%96%87%E6%A1%A3-1"><span class="nav-number">2.5.2.2.</span> <span class="nav-text">接口文档</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WebOffice%E9%83%A8%E7%BD%B2"><span class="nav-number">3.</span> <span class="nav-text">WebOffice部署</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E8%A6%81%E6%B1%82-1"><span class="nav-number">3.1.</span> <span class="nav-text">环境要求</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%8E%A8%E8%8D%90%E9%85%8D%E7%BD%AE"><span class="nav-number">3.1.1.</span> <span class="nav-text">推荐配置</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%8A%82%E7%82%B9-1"><span class="nav-number">3.1.2.</span> <span class="nav-text">服务器节点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B7%A5%E5%85%B7%E5%AE%89%E8%A3%85"><span class="nav-number">3.1.3.</span> <span class="nav-text">工具安装</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E8%B5%84%E6%96%99-1"><span class="nav-number">3.2.</span> <span class="nav-text">部署资料</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E6%AD%A5%E9%AA%A4"><span class="nav-number">3.3.</span> <span class="nav-text">部署步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%A7%A3%E5%8E%8B%E5%B9%B6%E4%BF%AE%E6%94%B9%E9%85%8D%E7%BD%AE"><span class="nav-number">3.3.1.</span> <span class="nav-text">解压并修改配置</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%A7%A3%E5%8E%8B%E5%AE%89%E8%A3%85%E7%9B%AE%E5%BD%95"><span class="nav-number">3.3.1.1.</span> <span class="nav-text">解压安装目录</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%87%8D%E8%A6%81%E6%96%87%E4%BB%B6%E8%AF%B4%E6%98%8E"><span class="nav-number">3.3.1.2.</span> <span class="nav-text">重要文件说明</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%88%9D%E6%AD%A5%E4%BF%AE%E6%94%B9%E9%85%8D%E7%BD%AE"><span class="nav-number">3.3.1.3.</span> <span class="nav-text">初步修改配置</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%AD%97%E4%BD%93%E5%BA%93"><span class="nav-number">3.3.1.4.</span> <span class="nav-text">安装字体库</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E5%B9%B6%E6%9B%B4%E6%96%B0%E6%8E%88%E6%9D%83%E6%96%87%E4%BB%B6"><span class="nav-number">3.3.2.</span> <span class="nav-text">获取并更新授权文件</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E6%9C%BA%E5%99%A8%E7%A0%81"><span class="nav-number">3.3.2.1.</span> <span class="nav-text">生成机器码</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E6%8E%88%E6%9D%83%E6%96%87%E4%BB%B6"><span class="nav-number">3.3.2.2.</span> <span class="nav-text">获取授权文件</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%9B%BF%E6%8D%A2%E6%8E%88%E6%9D%83%E6%96%87%E4%BB%B6"><span class="nav-number">3.3.2.3.</span> <span class="nav-text">替换授权文件</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E6%9C%8D%E5%8A%A1"><span class="nav-number">3.3.2.4.</span> <span class="nav-text">更新服务</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E5%8F%8A%E6%9C%8D%E5%8A%A1%E7%BB%B4%E6%8A%A4"><span class="nav-number">3.3.3.</span> <span class="nav-text">运行及服务维护</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E4%BF%9D%E6%8A%A4%E8%BF%9B%E7%A8%8B"><span class="nav-number">3.3.3.1.</span> <span class="nav-text">启动保护进程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E9%AA%8C%E8%AF%81-1"><span class="nav-number">3.4.</span> <span class="nav-text">服务验证</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E8%AE%BF%E9%97%AEweboffice%E6%9C%8D%E5%8A%A1"><span class="nav-number">3.4.1.</span> <span class="nav-text">直接访问weboffice服务</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%AE%98%E6%96%B9%E7%BB%99%E7%9A%84demo%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.4.1.1.</span> <span class="nav-text">官方给的demo示例</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%AE%98%E6%96%B9%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3"><span class="nav-number">3.4.1.2.</span> <span class="nav-text">官方开发文档</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BB%8F%E8%BF%87gateway%E7%BD%91%E5%85%B3%E8%AE%BF%E9%97%AE-1"><span class="nav-number">3.4.2.</span> <span class="nav-text">经过gateway网关访问</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%AE%98%E6%96%B9%E7%BB%99%E7%9A%84demo%E7%A4%BA%E4%BE%8B-1"><span class="nav-number">3.4.2.1.</span> <span class="nav-text">官方给的demo示例</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%AE%98%E6%96%B9%E5%BC%80%E5%8F%91%E6%96%87%E6%A1%A3-1"><span class="nav-number">3.4.2.2.</span> <span class="nav-text">官方开发文档</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">部署总结</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BE%BF%E6%8D%B7%E6%80%A7"><span class="nav-number">4.1.</span> <span class="nav-text">便捷性</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#FCS%E6%9C%8D%E5%8A%A1"><span class="nav-number">4.1.1.</span> <span class="nav-text">FCS服务</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#WebOffice%E6%9C%8D%E5%8A%A1"><span class="nav-number">4.1.2.</span> <span class="nav-text">WebOffice服务</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%AB%98%E5%8F%AF%E7%94%A8%EF%BC%88HA%EF%BC%89"><span class="nav-number">4.2.</span> <span class="nav-text">高可用（HA）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#FCS%E6%9C%8D%E5%8A%A1-1"><span class="nav-number">4.2.1.</span> <span class="nav-text">FCS服务</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#WebOffice%E6%9C%8D%E5%8A%A1-1"><span class="nav-number">4.2.2.</span> <span class="nav-text">WebOffice服务</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E6%80%A7"><span class="nav-number">4.3.</span> <span class="nav-text">安全性</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%93%BE%E8%B7%AF%E4%BF%A1%E9%81%93%E5%AE%89%E5%85%A8%EF%BC%88https%EF%BC%89"><span class="nav-number">4.3.1.</span> <span class="nav-text">链路信道安全（https）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%98%B2%E7%9B%97%E9%93%BE"><span class="nav-number">4.3.2.</span> <span class="nav-text">防盗链</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%A3%80%E6%9F%A5http%E5%A4%B4%E9%83%A8%E7%9A%84referer%E5%AD%97%E6%AE%B5"><span class="nav-number">4.3.2.1.</span> <span class="nav-text">检查http头部的referer字段</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%B8%9A%E5%8A%A1%E5%9B%9E%E8%B0%83%E6%8E%A5%E5%8F%A3%E6%A3%80%E6%9F%A5"><span class="nav-number">4.3.2.2.</span> <span class="nav-text">业务回调接口检查</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%8D%E8%90%BD%E5%9C%B0%E6%96%87%E6%A1%A3"><span class="nav-number">4.3.3.</span> <span class="nav-text">不落地文档</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zangh"
+      src="/images/my-avatar.jpg">
+  <p class="site-author-name" itemprop="name">zangh</p>
+  <div class="site-description" itemprop="description">不积跬步 无以至千里</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">57</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=1950343972&auto=1&height=66"></iframe>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ForeverZang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ForeverZang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/7619861326" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;7619861326" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://gitee.com/www.bau123.com" title="https:&#x2F;&#x2F;gitee.com&#x2F;www.bau123.com" rel="noopener" target="_blank">Gitee</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/u012285269" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;u012285269" rel="noopener" target="_blank">CSDN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mvnrepository.com/" title="https:&#x2F;&#x2F;mvnrepository.com" rel="noopener" target="_blank">Maven</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://tool.lu/c/other" title="https:&#x2F;&#x2F;tool.lu&#x2F;c&#x2F;other" rel="noopener" target="_blank">Tools</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://regexper.com/" title="https:&#x2F;&#x2F;regexper.com" rel="noopener" target="_blank">Regexper</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/ForeverZang/ForeverZang" title="https:&#x2F;&#x2F;github.com&#x2F;ForeverZang&#x2F;ForeverZang" rel="noopener" target="_blank">Images</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zangh</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">251k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">3:48</span>
+</div>
+
+        
+
+
+
+
+
+
+<script data-pjax>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"mduyVmAWkh7R2nK98LxGBuFp-gzGzoHsz","app_key":"oncH6LSVH5snGThBoRpokkWT","server_url":null,"security":false};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+    </div>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":140,"height":240},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

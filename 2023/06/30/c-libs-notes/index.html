@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"foreverzang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="基础概念POSIX是什么？ POSIX：全称Portable Operating System Interface of UNIX（可移植操作系统接口），是由IEEE指定的一系列标准，用于澄清和统一Unix-y操作系统提供的应用程序编程接口。  接口规范：  定义了操作系统至少应该为应用程序提供的接口，同时为应用程序提供了 系统调用的接口规范 保证了符合POSIX标准的API的应用程序，可以非常方">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C标准库及CRT（运行时库）">
+<meta property="og:url" content="https://foreverzang.github.io/2023/06/30/c-libs-notes/index.html">
+<meta property="og:site_name" content="zangh&#39;s blog">
+<meta property="og:description" content="基础概念POSIX是什么？ POSIX：全称Portable Operating System Interface of UNIX（可移植操作系统接口），是由IEEE指定的一系列标准，用于澄清和统一Unix-y操作系统提供的应用程序编程接口。  接口规范：  定义了操作系统至少应该为应用程序提供的接口，同时为应用程序提供了 系统调用的接口规范 保证了符合POSIX标准的API的应用程序，可以非常方">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-06-30T03:56:58.000Z">
+<meta property="article:modified_time" content="2023-08-25T03:19:19.838Z">
+<meta property="article:author" content="zangh">
+<meta property="article:tag" content="C&#x2F;C++">
+<meta property="article:tag" content="make">
+<meta property="article:tag" content="libs">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://foreverzang.github.io/2023/06/30/c-libs-notes/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>C标准库及CRT（运行时库） | zangh's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">zangh's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录 总结 备查</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://foreverzang.github.io/2023/06/30/c-libs-notes/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/my-avatar.jpg">
+      <meta itemprop="name" content="zangh">
+      <meta itemprop="description" content="不积跬步 无以至千里">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="zangh's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          C标准库及CRT（运行时库）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-30 11:56:58" itemprop="dateCreated datePublished" datetime="2023-06-30T11:56:58+08:00">2023-06-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-08-25 11:19:19" itemprop="dateModified" datetime="2023-08-25T11:19:19+08:00">2023-08-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C-C/" itemprop="url" rel="index"><span itemprop="name">C/C++</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C-C/libs/" itemprop="url" rel="index"><span itemprop="name">libs</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2023/06/30/c-libs-notes/" class="post-meta-item leancloud_visitors" data-flag-title="C标准库及CRT（运行时库）" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="基础概念"><a href="#基础概念" class="headerlink" title="基础概念"></a>基础概念</h2><h3 id="POSIX是什么？"><a href="#POSIX是什么？" class="headerlink" title="POSIX是什么？"></a>POSIX是什么？</h3><blockquote>
+<p>POSIX：全称Portable Operating System Interface of UNIX（可移植操作系统接口），是由IEEE指定的一系列标准，用于澄清和统一Unix-y操作系统提供的应用程序编程接口。</p>
+</blockquote>
+<p>接口规范：</p>
+<ul>
+<li>定义了操作系统至少应该为应用程序提供的接口，同时为应用程序提供了 <strong>系统调用的接口规范</strong></li>
+<li>保证了符合POSIX标准的API的应用程序，可以非常方便的 <strong>移植</strong> 到其它遵守该规范的系统上</li>
+<li>操作系统（Unix、Windows）API通常以 <strong>C库的方式</strong> 封装了这些符合POSIX标准的系统接口</li>
+</ul>
+<p>作用体现：</p>
+<ul>
+<li>当你编写的程序是依赖 POSIX 标准时，你可以非常轻松地把它移植到其它类Unix平台上（例如：包括但不限于Linux！）</li>
+<li>如果编写的程序使用了某些不在 POSIX 范围内的Linux API时，那如果你将很难把该程序移植到其它类Unix平台上（例如：MacOS）</li>
+</ul>
+<span id="more"></span>
+
+<h3 id="GNU与GCC是什么？"><a href="#GNU与GCC是什么？" class="headerlink" title="GNU与GCC是什么？"></a>GNU与GCC是什么？</h3><h4 id="GNU"><a href="#GNU" class="headerlink" title="GNU"></a>GNU</h4><blockquote>
+<p>GNU：全称是GNU‘s Not Unix，是一个 <strong>自由软件操作系统</strong> —就是说，它尊重其使用者的自由。GNU 操作系统包括 GNU 软件包（专门由 GNU 工程发布的程序）和由第三方发布的自由软件。<br>它所采用的的典型内核是Linux，该组合叫作GNU&#x2F;Linux操作系统</p>
+</blockquote>
+<p>GNU软件包列表：</p>
+<ul>
+<li>编译器套装（GCC）<ul>
+<li>GCC：C&#x2F;C++语言编写的程序转换成为处理器能够执行的二进制代码的过程即由编译器完成</li>
+<li>Binutils：一组二进制程序处理工具，包括：addr2line、ar、objcopy、objdump、as、ld、ldd、readelf、size等。这一组工具是开发和调试不可缺少的工具<ul>
+<li>addr2line：用来将程序地址转换成其所对应的程序源文件及所对应的代码行，也可以得到所对应的函数，该工具将帮助调试器在调试的过程中定位对应的源代码位置</li>
+<li>as：主要用于汇编</li>
+<li>ld：主要用于链接</li>
+<li>ar：主要用于创建静态库</li>
+<li>ldd：可以用于查看一个可执行程序依赖的共享库</li>
+<li>objcopy：将一种对象文件翻译成另一种格式，譬如将.bin转换成.elf、或者将.elf转换成.bin等</li>
+<li>objdump：主要的作用是反汇编</li>
+<li>readelf：显示有关ELF文件的信息</li>
+<li>size：列出可执行文件每个部分的尺寸和总尺寸，代码段、数据段、总大小等</li>
+</ul>
+</li>
+<li>CRT：C语言标准仅仅定义了C标准库函数原型并没有提供实现，C语言编译器通常需要一个C运行时库（C Run Time Libray，CRT）的支持</li>
+</ul>
+</li>
+<li>C库（glibc）</li>
+<li>核心工具组（coreutils）</li>
+<li>调试工具（GDB）</li>
+</ul>
+<h4 id="GCC"><a href="#GCC" class="headerlink" title="GCC"></a>GCC</h4><blockquote>
+<p>GCC：全称是GNU Compiler Collection，即 GNU编译器套件。GCC是GNU操作系统的官方编译器，已经被大多数类Unix操作系统采纳为标准的编译器。</p>
+</blockquote>
+<p>编译器有很多种，不同平台下有不同类型的编译器：</p>
+<ul>
+<li>Windows 下常用的是微软开发的 cl.exe，它被集成在 Visual Studio 或 Visual C++ 中，一般不单独使用</li>
+<li>Linux 下常用的是 GUN 组织开发的 GCC，很多 Linux 发行版都自带 GCC</li>
+<li>Mac 下常用的是 LLVM&#x2F;Clang（以前是 GCC，后来由于 GCC 的不配合才改为 LLVM&#x2F;Clang）</li>
+</ul>
+<p>集成了上述编译器的IDE：</p>
+<ul>
+<li>Windows下使用<ul>
+<li>Visual C++ 6.0 一款很古老的微软开发的IDE，历史太久远很多平台已经不支持了</li>
+<li>Visual Studio（简称VS） 是Visual C++ 6.0的升级版，也是实际开发中会用到的工具，缺点就是太大了，安装不方便</li>
+<li>Dev C++ 免费开源的C&#x2F;C++ IDE，小巧安装卸载方便，学习成本低，缺点是调试能力弱</li>
+</ul>
+</li>
+<li>Linux下使用<ul>
+<li>GCC</li>
+</ul>
+</li>
+<li>Mac OS X 下使用<ul>
+<li>Xcode</li>
+</ul>
+</li>
+</ul>
+<h5 id="GCC的使用"><a href="#GCC的使用" class="headerlink" title="GCC的使用"></a>GCC的使用</h5><p>在使用gcc进行编译时，它会查找系统默认的include和link路径：</p>
+<ul>
+<li>类Unix系统中<ul>
+<li>&#x2F;usr&#x2F;local&#x2F;include</li>
+<li>&#x2F;usr&#x2F;lib&#x2F;gcc-lib&#x2F;target&#x2F;version&#x2F;include</li>
+<li>&#x2F;usr&#x2F;target&#x2F;include</li>
+<li>&#x2F;usr&#x2F;include</li>
+<li>用户在编译时，传入编译参数 -I</li>
+</ul>
+</li>
+</ul>
+<h3 id="C标准"><a href="#C标准" class="headerlink" title="C标准"></a>C标准</h3><blockquote>
+<p>C标准主要由两部分组成，一部分描述 <strong>C语法</strong>，另一部分描述 <strong>C标准库</strong> </p>
+</blockquote>
+<p>C标准库，通常指ANSI C（美国国家标准协会）：</p>
+<ul>
+<li>定义了一组标准头文件，每个文件中包含一些相关的函数、变量、类型声明和宏定义</li>
+<li>只定义原型，不提供实现（由操作系统进行实现）</li>
+<li>应用程序开发者可以通过包含这些C标准库函数的头文件来开发程序，这样就可以屏蔽平台的差异，使程序的具备可移植性</li>
+</ul>
+<h3 id="C运行库"><a href="#C运行库" class="headerlink" title="C运行库"></a>C运行库</h3><blockquote>
+<p>C标准库函数的实现留给了各个系统平台（例如：Windows、MacOS X、Linux），各系统的实现称为 <strong>C运行时库（C Run Time Library）</strong> 简称 CRT</p>
+</blockquote>
+<p>C运行时库：</p>
+<ul>
+<li>与平台相关联的</li>
+<li>程序与操作系统之间的抽象层<ul>
+<li>Linux平台下C语言运行时库为 glibc（GNU C Library）</li>
+<li>Windows平台下C语言运行时库位MSVCRT（Microsoft Visual C Run-time）</li>
+</ul>
+</li>
+<li>C语言并未规定线程库，但是glibc和MSVCRT都包含了线程操作的库函数。所以glibc和MSVCRT事实上是标准C语言运行库的超集，它们各自对C标准库进行了一些扩展</li>
+<li>CRT实际上包含两部分<ul>
+<li>基于C标准库中定义的接口函数</li>
+<li>根据平台自身开发的相关的或者不相关的库接口函数</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>要在一个平台上支持C语言，不仅要实现符合平台的C编译器，还要实现C标准库，这样的实现才算符合C标准。</p>
+</blockquote>
+<h3 id="glibc"><a href="#glibc" class="headerlink" title="glibc"></a>glibc</h3><blockquote>
+<p>GNU C实际上是GNU C库，又称为glibc。<br>在Linux平台上使用最广泛的CRT就是glibc，其中包含C标准库的实现，也包含所有系统函数。几乎所有C程序都要调用glibc的库函数，所以glibc是Linux平台C程序运行的基础。</p>
+</blockquote>
+<p>glibc常见库说明：</p>
+<ul>
+<li>libc.so：最基本、最常用的 <strong>C标准库函数和系统函数</strong> 的实现都在此动态链接库中，几乎所有C程序的运行都依赖于libc.so</li>
+<li>libm.so：数学计算的相关的库函数（非标准库）</li>
+<li>libpthread.so：多线程相关的库函数（非标准库）</li>
+</ul>
+<p>glibc发行版本的组成部分：</p>
+<ul>
+<li>头文件：例如stdio.h、stdlib.h等，通常位于&#x2F;usr&#x2F;include目录下</li>
+<li>库的二进制文件：主要为 C标准库的实现 ，有静态和动态两个版本。<ul>
+<li>动态的标准库：&#x2F;lib&#x2F;libc.so.6</li>
+<li>静态的标准库：&#x2F;usr&#x2F;lib&#x2F;libc.a</li>
+</ul>
+</li>
+<li>辅助程序运行的运行库，可以称得上是真正的“运行库”<ul>
+<li>&#x2F;usr&#x2F;lib&#x2F;crt1.o</li>
+<li>&#x2F;usr&#x2F;lib&#x2F;crti.o</li>
+<li>&#x2F;usr&#x2F;lib&#x2F;crtn.o</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>libc有时时专指libc.so这个库文件，而说glibc时指的是glibc提供的所有库文件</p>
+</blockquote>
+<h3 id="uClibc"><a href="#uClibc" class="headerlink" title="uClibc"></a>uClibc</h3><p>uClibc 是一个面向嵌入式Linux系统的小型的C标准库。最初uClibc是为了支持uClinux而开发，这是一个不需要内存管理单元（MMU）的Linux版本。uClibc比一般用于Linux发行版的C库GNU C Library (glibc)要小得多， uClibc专注于嵌入式Linux。很多功能可以根据空间需求进行取舍。</p>
+<h3 id="Newlib"><a href="#Newlib" class="headerlink" title="Newlib"></a>Newlib</h3><p>Newlib 是一个面向嵌入式系统的C运行库。最初是由Cygnus Solutions收集组装的一个源代码集合，取名为newlib，现在由Red Hat维护，目前的最新的版本是2.1.0。对于与GNU兼容的嵌入式C运行库，Newlib并不是唯一的选择，但是从成熟度来讲，newlib是最优秀的。newlib可移植性强，具有可重入特性、功能完备等特点，已广泛应用于各种嵌入式系统中。Cygwin目前使用Newlib来作为它的C标准库。</p>
+<h2 id="动态连接库制作"><a href="#动态连接库制作" class="headerlink" title="动态连接库制作"></a>动态连接库制作</h2><ol>
+<li>Windows环境下 <strong>*.dll</strong> (dynamic link library)</li>
+<li>Linux环境下 <strong>*.so</strong> (shared object)</li>
+<li>Mac环境下 <strong>*.dylib</strong> (dynamic library)</li>
+</ol>
+<h3 id="Linux环境"><a href="#Linux环境" class="headerlink" title="Linux环境"></a>Linux环境</h3><h4 id="准备源码"><a href="#准备源码" class="headerlink" title="准备源码"></a>准备源码</h4><p>目录结构如下（计划把 <em>test&#x2F;</em> 做成共享对象）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">tree -L 2</span><br><span class="line">.</span><br><span class="line">├── Makefile</span><br><span class="line">├── main.c</span><br><span class="line">├── test</span><br><span class="line">│   ├── Makefile</span><br><span class="line">│   ├── sort.c</span><br><span class="line">│   ├── sort.h</span><br><span class="line">└── test.h</span><br></pre></td></tr></table></figure>
+
+<h4 id="编译源码"><a href="#编译源码" class="headerlink" title="编译源码"></a>编译源码</h4><h5 id="源码编译成-so"><a href="#源码编译成-so" class="headerlink" title="源码编译成*.so"></a>源码编译成*.so</h5><ol>
+<li>将 <strong>*.c</strong> 文件编译成 <strong>*.o</strong> 文件<ul>
+<li>-fpic：生成适合在共享库中使用的位置无关代码（PIC-&gt;位置无关代码）</li>
+<li>-c：编译时保留 *.o 中间对象（下一步生成 *.so 需要用到）</li>
+<li>-o：不加该选项，默认生成与第一个源码文件同名的 *.o 对象文件<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -fpic -c sort.c</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li>把 <strong>*.o</strong> 文件生成动态库 <strong>*.so</strong><ul>
+<li>lib：前缀，固定格式</li>
+<li>xxx：名称，自己确定</li>
+<li>.so：后缀，固定格式<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -shared sort.o -o libsort.so</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ol>
+<h4 id="使用动态库"><a href="#使用动态库" class="headerlink" title="使用动态库"></a>使用动态库</h4><h5 id="编译链接动态库"><a href="#编译链接动态库" class="headerlink" title="编译链接动态库"></a>编译链接动态库</h5><ol>
+<li>链接动态库编译成可执行文件 main<ul>
+<li>-I：优先头文件匹配目录</li>
+<li>-L：库的存储路径</li>
+<li>-l：库的名称（不需要“lib”和扩展名“.so”）<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">gcc main.c -o main -I ./ -L ./ -l sort </span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">目录接口如下：</span></span><br><span class="line">tree -L 2</span><br><span class="line">.</span><br><span class="line">├── Makefile</span><br><span class="line">├── main</span><br><span class="line">├── main.c</span><br><span class="line">├── test</span><br><span class="line">│   ├── Makefile</span><br><span class="line">│   ├── libsort.so</span><br><span class="line">│   ├── sort.c</span><br><span class="line">│   ├── sort.h</span><br><span class="line">│   └── sort.o</span><br><span class="line">└── test.h</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ol>
+<h5 id="运行可执行文件"><a href="#运行可执行文件" class="headerlink" title="运行可执行文件"></a>运行可执行文件</h5><ol>
+<li>运行可执行文件<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">./main</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">报错信息如下</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">./main: error <span class="keyword">while</span> loading shared libraries: libsort.so: cannot open shared object file: No such file or directory</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看依赖信息</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ldd main</span></span><br><span class="line">linux-vdso.so.1 (0x00007fff7bf58000)</span><br><span class="line">libsort.so =&gt; not found               # 未找到sort动态库，因为main只知道依赖库名，而不知道库文件放在哪里</span><br><span class="line">libc.so.6 =&gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007fd92403e000)</span><br><span class="line">/lib64/ld-linux-x86-64.so.2 (0x00007fd924632000)</span><br></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li>原因是动态链接库不会被包含在 main 可执行文件内。</li>
+<li>当系统加载可执行代码时候，能够知道其所依赖的库的名字，但是还需要知道绝对路径。此时就需要系统的动态载入器来获取该绝对路径，对于elf格式的可执行程序是由ld-linux.so来完成的，搜索路径为：<ul>
+<li>——&gt; DT_RPATH段 </li>
+<li>——&gt; 环境变量LD_LIBRARY_PATH </li>
+<li>——&gt; &#x2F;etc&#x2F;ld.so.cache文件列表 </li>
+<li>——&gt; &#x2F;lib&#x2F;，&#x2F;usr&#x2F;lib</li>
+<li>目录找到库文件后将其载入内存。</li>
+</ul>
+</li>
+</ul>
+<h5 id="添加库文件路径"><a href="#添加库文件路径" class="headerlink" title="添加库文件路径"></a>添加库文件路径</h5><h6 id="临时修改Linux环境变量LD-LIBRARY-PATH"><a href="#临时修改Linux环境变量LD-LIBRARY-PATH" class="headerlink" title="临时修改Linux环境变量LD_LIBRARY_PATH"></a>临时修改Linux环境变量LD_LIBRARY_PATH</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export LD_LIBRARY_PATH=/动态库的绝对路径:$LD_LIBRARY_PATH</span><br></pre></td></tr></table></figure>
+<p>实例：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">export</span> LD_LIBRARY_PATH=/mnt/d/workspace/CLionProjects/test1/test:<span class="variable">$LD_LIBRARY_PATH</span></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">echo</span> <span class="variable">$LD_LIBRARY_PATH</span></span></span><br><span class="line">/mnt/d/workspace/CLionProjects/test1/test:</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ldd main</span></span><br><span class="line">linux-vdso.so.1 (0x00007fff0bb8f000)</span><br><span class="line">libsort.so =&gt; /mnt/d/workspace/CLionProjects/test1/test/libsort.so (0x00007fd523143000)</span><br><span class="line">libc.so.6 =&gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007fd522d52000)</span><br><span class="line">/lib64/ld-linux-x86-64.so.2 (0x00007fd523548000)</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">./main</span></span><br><span class="line">Hello, World!</span><br><span class="line">中位数：2.0</span><br><span class="line">name=zangh,age=32</span><br><span class="line">最长回文字段为：</span><br><span class="line">my name is zangheng</span><br></pre></td></tr></table></figure>
+
+<h6 id="用户层次上更改Linux环境变量"><a href="#用户层次上更改Linux环境变量" class="headerlink" title="用户层次上更改Linux环境变量"></a>用户层次上更改Linux环境变量</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">vim ~/.bashrc</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在最后一行加入</span></span><br><span class="line">export LD_LIBRARY_PATH=/动态库的绝对路径:$LD_LIBRARY_PATH</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">source</span> ~/.bashrc</span></span><br></pre></td></tr></table></figure>
+
+<h6 id="修改系统级别环境变量"><a href="#修改系统级别环境变量" class="headerlink" title="修改系统级别环境变量"></a>修改系统级别环境变量</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">vim /etc/profile</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在最后一行加入</span></span><br><span class="line">export LD_LIBRARY_PATH=/动态库的绝对路径:$LD_LIBRARY_PATH</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">source</span> /etc/profile</span></span><br></pre></td></tr></table></figure>
+
+<h6 id="修改-x2F-etc-x2F-ld-so-cache文件列表"><a href="#修改-x2F-etc-x2F-ld-so-cache文件列表" class="headerlink" title="修改&#x2F;etc&#x2F;ld.so.cache文件列表"></a>修改&#x2F;etc&#x2F;ld.so.cache文件列表</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">vim /etc/ld.so.conf</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在最后一行加入</span></span><br><span class="line">export LD_LIBRARY_PATH=/动态库的绝对路径:$LD_LIBRARY_PATH</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">ldconfig</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><ol>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/grooovvve/p/12907659.html">基础概念——C标准、C运行库和glibc</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/grooovvve/p/10740524.html">基础概念——何为GNU与GCC</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/C-C/" rel="tag"><i class="fa fa-tag"></i> C/C++</a>
+              <a href="/tags/make/" rel="tag"><i class="fa fa-tag"></i> make</a>
+              <a href="/tags/libs/" rel="tag"><i class="fa fa-tag"></i> libs</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/30/c-gcc-notes/" rel="prev" title="C/C++ gcc编译过程">
+      <i class="fa fa-chevron-left"></i> C/C++ gcc编译过程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/30/c-gdb-notes/" rel="next" title="C/C++调试工具gdb">
+      C/C++调试工具gdb <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+  </div>
+  
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">基础概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#POSIX%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">1.1.</span> <span class="nav-text">POSIX是什么？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GNU%E4%B8%8EGCC%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">1.2.</span> <span class="nav-text">GNU与GCC是什么？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#GNU"><span class="nav-number">1.2.1.</span> <span class="nav-text">GNU</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#GCC"><span class="nav-number">1.2.2.</span> <span class="nav-text">GCC</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#GCC%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">GCC的使用</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C%E6%A0%87%E5%87%86"><span class="nav-number">1.3.</span> <span class="nav-text">C标准</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C%E8%BF%90%E8%A1%8C%E5%BA%93"><span class="nav-number">1.4.</span> <span class="nav-text">C运行库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#glibc"><span class="nav-number">1.5.</span> <span class="nav-text">glibc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#uClibc"><span class="nav-number">1.6.</span> <span class="nav-text">uClibc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Newlib"><span class="nav-number">1.7.</span> <span class="nav-text">Newlib</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E8%BF%9E%E6%8E%A5%E5%BA%93%E5%88%B6%E4%BD%9C"><span class="nav-number">2.</span> <span class="nav-text">动态连接库制作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux%E7%8E%AF%E5%A2%83"><span class="nav-number">2.1.</span> <span class="nav-text">Linux环境</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E6%BA%90%E7%A0%81"><span class="nav-number">2.1.1.</span> <span class="nav-text">准备源码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E6%BA%90%E7%A0%81"><span class="nav-number">2.1.2.</span> <span class="nav-text">编译源码</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E6%88%90-so"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">源码编译成*.so</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%8A%A8%E6%80%81%E5%BA%93"><span class="nav-number">2.1.3.</span> <span class="nav-text">使用动态库</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E9%93%BE%E6%8E%A5%E5%8A%A8%E6%80%81%E5%BA%93"><span class="nav-number">2.1.3.1.</span> <span class="nav-text">编译链接动态库</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6"><span class="nav-number">2.1.3.2.</span> <span class="nav-text">运行可执行文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E5%BA%93%E6%96%87%E4%BB%B6%E8%B7%AF%E5%BE%84"><span class="nav-number">2.1.3.3.</span> <span class="nav-text">添加库文件路径</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%B8%B4%E6%97%B6%E4%BF%AE%E6%94%B9Linux%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8FLD-LIBRARY-PATH"><span class="nav-number">2.1.3.3.1.</span> <span class="nav-text">临时修改Linux环境变量LD_LIBRARY_PATH</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E5%B1%82%E6%AC%A1%E4%B8%8A%E6%9B%B4%E6%94%B9Linux%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">2.1.3.3.2.</span> <span class="nav-text">用户层次上更改Linux环境变量</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E7%B3%BB%E7%BB%9F%E7%BA%A7%E5%88%AB%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">2.1.3.3.3.</span> <span class="nav-text">修改系统级别环境变量</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9-x2F-etc-x2F-ld-so-cache%E6%96%87%E4%BB%B6%E5%88%97%E8%A1%A8"><span class="nav-number">2.1.3.3.4.</span> <span class="nav-text">修改&#x2F;etc&#x2F;ld.so.cache文件列表</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">3.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zangh"
+      src="/images/my-avatar.jpg">
+  <p class="site-author-name" itemprop="name">zangh</p>
+  <div class="site-description" itemprop="description">不积跬步 无以至千里</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">57</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=1950343972&auto=1&height=66"></iframe>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ForeverZang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ForeverZang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/7619861326" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;7619861326" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://gitee.com/www.bau123.com" title="https:&#x2F;&#x2F;gitee.com&#x2F;www.bau123.com" rel="noopener" target="_blank">Gitee</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/u012285269" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;u012285269" rel="noopener" target="_blank">CSDN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mvnrepository.com/" title="https:&#x2F;&#x2F;mvnrepository.com" rel="noopener" target="_blank">Maven</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://tool.lu/c/other" title="https:&#x2F;&#x2F;tool.lu&#x2F;c&#x2F;other" rel="noopener" target="_blank">Tools</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://regexper.com/" title="https:&#x2F;&#x2F;regexper.com" rel="noopener" target="_blank">Regexper</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/ForeverZang/ForeverZang" title="https:&#x2F;&#x2F;github.com&#x2F;ForeverZang&#x2F;ForeverZang" rel="noopener" target="_blank">Images</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zangh</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">251k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">3:48</span>
+</div>
+
+        
+
+
+
+
+
+
+<script data-pjax>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"mduyVmAWkh7R2nK98LxGBuFp-gzGzoHsz","app_key":"oncH6LSVH5snGThBoRpokkWT","server_url":null,"security":false};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+    </div>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":140,"height":240},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

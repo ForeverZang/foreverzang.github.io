@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"foreverzang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="软件介绍 Redis（REmote DIctionary Server的缩写）即远程字典服务器，采用字典结构以键值对的形式存储数据。使用C语言编写的，最初的设计目的是为了作为数据库来使用，随着其优秀的性能和稳定性，更多的被用来作为缓存和消息队列使用【我个人接触最多的使用方式是：分布式锁和缓存】。  内容简介 数据结构、常用命令、key淘汰及持久化策略 Redis普通、管道、事务及Lua脚本命令的区">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis原理介绍、备忘录等">
+<meta property="og:url" content="https://foreverzang.github.io/2023/05/28/redis-notes/index.html">
+<meta property="og:site_name" content="zangh&#39;s blog">
+<meta property="og:description" content="软件介绍 Redis（REmote DIctionary Server的缩写）即远程字典服务器，采用字典结构以键值对的形式存储数据。使用C语言编写的，最初的设计目的是为了作为数据库来使用，随着其优秀的性能和稳定性，更多的被用来作为缓存和消息队列使用【我个人接触最多的使用方式是：分布式锁和缓存】。  内容简介 数据结构、常用命令、key淘汰及持久化策略 Redis普通、管道、事务及Lua脚本命令的区">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/27e2a76dcafa471da0b1f8dfee652c62.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/eae07e9f99194ec9a5fa52b34b668c0e.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/30524bce99a74791af9791d187445819.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/cf41bd4c2ccf4df4ba23abb970b9fa56.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/518a858e0b474a18bbaa3eaf75a4b964.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/dc8bac3589da455da97aa45410b30c55.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/309f6de9ea6b4b8eb972e2fc2e469f35.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/857b2f07dc88460aa119b2a8130a1c17.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_12,color_FFFFFF,t_70,g_se,x_16">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/6032eb67602e4960a3bc735a487447f4.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="article:published_time" content="2023-05-28T00:25:08.000Z">
+<meta property="article:modified_time" content="2023-08-25T03:19:19.849Z">
+<meta property="article:author" content="zangh">
+<meta property="article:tag" content="笔记">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/27e2a76dcafa471da0b1f8dfee652c62.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16">
+
+<link rel="canonical" href="https://foreverzang.github.io/2023/05/28/redis-notes/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Redis原理介绍、备忘录等 | zangh's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">zangh's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录 总结 备查</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://foreverzang.github.io/2023/05/28/redis-notes/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/my-avatar.jpg">
+      <meta itemprop="name" content="zangh">
+      <meta itemprop="description" content="不积跬步 无以至千里">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="zangh's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis原理介绍、备忘录等
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-05-28 08:25:08" itemprop="dateCreated datePublished" datetime="2023-05-28T08:25:08+08:00">2023-05-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-08-25 11:19:19" itemprop="dateModified" datetime="2023-08-25T11:19:19+08:00">2023-08-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/" itemprop="url" rel="index"><span itemprop="name">中间件</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E5%AD%98%E5%82%A8/" itemprop="url" rel="index"><span itemprop="name">存储</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E5%AD%98%E5%82%A8/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2023/05/28/redis-notes/" class="post-meta-item leancloud_visitors" data-flag-title="Redis原理介绍、备忘录等" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>16k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>15 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="软件介绍"><a href="#软件介绍" class="headerlink" title="软件介绍"></a>软件介绍</h2><blockquote>
+<p>Redis（REmote DIctionary Server的缩写）即远程字典服务器，采用字典结构以键值对的形式存储数据。使用C语言编写的，最初的设计目的是为了作为数据库来使用，随着其优秀的性能和稳定性，更多的被用来作为缓存和消息队列使用【我个人接触最多的使用方式是：分布式锁和缓存】。</p>
+</blockquote>
+<h2 id="内容简介"><a href="#内容简介" class="headerlink" title="内容简介"></a>内容简介</h2><ul>
+<li>数据结构、常用命令、key淘汰及持久化策略</li>
+<li>Redis普通、管道、事务及Lua脚本命令的区别</li>
+</ul>
+<span id="more"></span>
+
+<h2 id="数据结构、常用命令、key淘汰及持久化策略"><a href="#数据结构、常用命令、key淘汰及持久化策略" class="headerlink" title="数据结构、常用命令、key淘汰及持久化策略"></a>数据结构、常用命令、key淘汰及持久化策略</h2><h3 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h3><blockquote>
+<p>Redis中每个键都有存储一个明确的类型，除了通用的命令；其它的专属类型命令滥用会导致报错（例如：用字符串类型的命令去操作散列类型的key）。</p>
+</blockquote>
+<p><strong>Redis常见的数据类型，详细说明参考 《Redis入门指南（第二版）.pdf》</strong>：</p>
+<ol>
+<li>字符串类型（string）：理论上所有类型都可以用字符串类型存储，区别在于字符串内容的组织方式（<strong>且由于无法支持对单个字段的原子性操作导致竞态问题</strong>）；整数，浮点数、bit位都是以字符串形式存储的。</li>
+<li>散列类型（hash）：和Redis本身一样采用KV形式的字典结构，区别是K最多能存储2<del>32</del>个，V只能是字符串类型，不能嵌套【事实上，Redis的所有数据类型都不支持嵌套】。</li>
+<li>队列类型（list）：可以用来存储一个有序的字符串列表（<strong>顺序不可调整</strong>），底层采用的数据结构是双向链表。优点是两段添加元素非常快，代价是下标方式获取元素较慢。同样最多能存储2<del>32</del><br>个元素。通过不通的PUSH和POP组合可以形成栈或队列，常用来记录日志，或作为消息队列。</li>
+<li>集合类型（set）：集合是无序的，且元素具有唯一性；数据结构上采用值为空的HashTable实现的，查询非常快捷，且支持集合之间的并、交和差集运算。</li>
+<li>有序集合类型（zset）：在集合的基础上为每一个元素都关联了一个得分字段（score），通过分数对集合进行排序，达到和列表同样的效果-有序性，且<strong>顺序可以根据score进行调整</strong>。</li>
+</ol>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://redis.io/commands/">官方命令文档</a>，<strong>Redis命令之于Redis</strong> 就像 <strong>SQL之于关系型DB</strong>；官方文档提供了100+的命令，常用的只有<strong>十几个</strong>而已。</p>
+<ul>
+<li>官方提供的所有单个redis命令都是原子性操作。</li>
+</ul>
+</blockquote>
+<h4 id="通用命令"><a href="#通用命令" class="headerlink" title="通用命令"></a>通用命令</h4><ul>
+<li>常用指令：</li>
+</ul>
+<ol>
+<li><p>EXISTS <em>key</em><br>判断key是否存在，存在返回1；否则返回0。</p>
+</li>
+<li><p>KEYS <em>pattern</em><br>查询符合规则的所有key列表，pattern为通配符格式。<br>注意：<strong>该命令会扫描所有的key存在严重的性能问题，生产环境是禁止使用的</strong>。</p>
+</li>
+<li><p>SCAN  <em>cursor</em> [<em>MATCH</em> <em>pattern</em>] [<em>COUNT</em> <em>count</em>] [<em>TYPE</em> <em>type</em>]<br>此命令可以理解为对KEYS命令的补充和使用的优化<br>注意：** <em>count</em>指的不是每次返回的记录条数，而是服务器要遍历的槽位数（需要结合HashTable的数据结构理解）；<em>cursor</em>很重要，用来记录完成遍历的槽位，初始为0**。</p>
+</li>
+<li><p>DEL <em>key</em><br>删除key，删除存在的key则返回1；否则返回0。<br>注意：删除key命令不支持多个key，可以通过编程方式实现批量删除。</p>
+</li>
+<li><p>TYPE <em>key</em><br>判断key存储的值类型，返回Redis已支持的数据类型。</p>
+</li>
+<li><p>EXPIRE <em>key</em> <em>seconds</em><br>设置过期时间，设置成功返回1，返回0表示键不存在，或设置失败。<br>注意：<strong>类似的命令还有PEXPIRE，单位为毫秒</strong>。</p>
+</li>
+<li><p>TTL <em>key</em><br>查看一个键还有多久过期，单位为秒；当键不存在时返回-2；当键没有设置过期时间时返回-1。<br>注意：<strong>类似的命令还有PTTL，单位为毫秒</strong>。</p>
+</li>
+<li><p>PERSIST <em>key</em><br>取消键的过期时间设置，取消成功返回1，当键不存在或者键原来就没有过期时间时返回0。</p>
+</li>
+<li><p>WATCH <em>key</em><br>监视一个键的值是否变化，通常配合事务一起用（仅作了解）<br>注意：<strong>WATCH监视的是键的值，当过期键失效时并不会触发WATCH动作</strong>。</p>
+</li>
+<li><p>OBJECT ENCODING <em>key</em><br>查看一个键的值，在Redis内部的数据结构。</p>
+</li>
+</ol>
+<ul>
+<li>进阶指令</li>
+</ul>
+<ol start="11">
+<li>redis-cli -h <em>127.0.0.1</em> -p <em>6379</em> –bigkeys -i <em>0.1</em><br>官方扫描redis大key的方法：每隔100条指令休眠 <em>0.1s</em>，避免线上的ops太高</li>
+</ol>
+<h4 id="字符串类型命令"><a href="#字符串类型命令" class="headerlink" title="字符串类型命令"></a>字符串类型命令</h4><ul>
+<li>常用命令：</li>
+</ul>
+<ol>
+<li><p>SET <em>key</em> <em>value</em><br>设置成功返回 <strong>OK</strong></p>
+</li>
+<li><p>MSET <em>key</em> <em>value</em> [<em>key</em> <em>value</em> …]<br>批量设置KV</p>
+</li>
+<li><p>SETNX <em>key</em> <em>value</em><br>如果字段已经存在则不执行任何操作且返回0；如果不存在和SET相同且返回1。<br>注意：逻辑上可以理解为 <strong>EXISTS + SET</strong> 命令的组合；<strong>由于其原子操作特性，经常被用来作为分布式锁的操作</strong>。</p>
+</li>
+<li><p>GET <em>key</em></p>
+</li>
+<li><p>MGET <em>key</em> [<em>key</em> …]<br>批量查询key</p>
+</li>
+<li><p>INCR &#x2F; DECR <em>key</em><br>自增&#x2F;递减操作<br>注意：<strong>由于其原子操作特性，经常被用来实现限流</strong>。</p>
+</li>
+<li><p>INCRBY &#x2F; DECRBY <em>key</em> <em>increment</em><br>可以设置自增&#x2F;自减的步长</p>
+</li>
+<li><p>INCRBYFLOAT &#x2F; DECRBYFLOAT <em>key</em> <em>increment</em><br>经过测试，如果对整数 自增&#x2F;自减 小数数后便不能再使用 <strong>INCR&#x2F;DECR</strong> 或 <strong>INCRBY&#x2F;DECRBY</strong> 进行操作了（因为 <strong>字符串就不再可以转成整数</strong>）。</p>
+</li>
+<li><p>APPEND <em>key</em> <em>value</em><br>向末尾追加字符串</p>
+</li>
+<li><p>STRLEN <em>key</em><br>统计字符串的长度</p>
+</li>
+</ol>
+<ul>
+<li>位图命令：</li>
+</ul>
+<ol start="11">
+<li><p>SETBIT <em>key</em> <em>offset</em> <em>value</em><br>相当于对字符串类型的字节级别的细部操作，<em>offset</em>：高&#x3D;&gt;低（从0开始），<em>value</em> 为 [<em>0</em>|<em>1</em>]。</p>
+</li>
+<li><p>GETBIT <em>key</em> <em>offset</em><br>查询指定的bit值，返回 [<em>0</em>|<em>1</em>]</p>
+</li>
+<li><p>BITCOUNT <em>key</em> [<em>start</em>] [<em>end</em>]<br>开始结束范围内值为1的个数</p>
+</li>
+<li><p>BITOP</p>
+</li>
+</ol>
+<h4 id="散列类型命令"><a href="#散列类型命令" class="headerlink" title="散列类型命令"></a>散列类型命令</h4><ul>
+<li>常用命令：</li>
+</ul>
+<ol>
+<li><p>HEXISTS <em>key</em> <em>field</em><br>判断该key下field字段是否存在。</p>
+</li>
+<li><p>HSET <em>key</em> <em>field</em> <em>value</em><br>Redis中所有SET不区分插入还是更新，当插入成功时，返回1；更新时，返回0。</p>
+</li>
+<li><p>HMSET <em>key</em> <em>field</em> <em>value</em> [<em>field</em> <em>value</em> …]</p>
+</li>
+<li><p>HGET <em>key</em> <em>field</em></p>
+</li>
+<li><p>HMGET <em>key</em> <em>field</em> [<em>field</em> …]</p>
+</li>
+<li><p>HGETALL <em>key</em><br>返回key下所有KV，单行为K，双行为V。</p>
+</li>
+<li><p>HDEL <em>key</em> <em>field</em> [<em>field</em> …]<br>删除一个或多个字段</p>
+</li>
+<li><p>HSETNX <em>key</em> <em>field</em> <em>value</em><br>作用同SETNX</p>
+</li>
+<li><p>HINCRBY <em>key</em> <em>field</em> <em>increment</em><br>可以设置字段递增&#x2F;递减的步长<br>注意：没有HDECRBY，可用 <em><strong>-increment</strong></em> 代替</p>
+</li>
+<li><p>HKEYS &#x2F; HVALS <em>key</em><br>只获取所有的字段名&#x2F;字段值</p>
+</li>
+</ol>
+<h4 id="列表类型命令"><a href="#列表类型命令" class="headerlink" title="列表类型命令"></a>列表类型命令</h4><ul>
+<li>常用命令：</li>
+</ul>
+<ol>
+<li><p>LPUSH &#x2F; RPUSH <em>key</em> <em>value</em> [<em>value</em> …]<br>向列表两端添加元素，返回值表示添加元素后的列表长度。</p>
+</li>
+<li><p>LPOP &#x2F; RPOP <em>key</em> <em>count</em><br>从列表两端弹出元素，count为一次性弹出数量，当不输入count时，默认为1；弹出的元素是有序的。<br>注意：<em><strong>BLPOP &#x2F; BRPOP 当列表中没有元素时，会阻塞当前线程，通常用来作为消息队里使用</strong></em>。</p>
+</li>
+<li><p>BLPOP &#x2F; BRPOP <em>key</em> <em>timeout</em><br>用法与 LPOP &#x2F; RPOP 一致，timeout的单位秒；表示超过timeout秒后还没获取到元素就返回空。<br>注意：<strong>当timeout&#x3D;0，表示如果获取不到元素就一直阻塞下去，知道接收到元素位置</strong>。</p>
+</li>
+<li><p>LLEN <em>key</em><br>返回列表的长度，当key不存在时返回0（由于列表只能两端操作，故length是维护的一个字段，查询效率为O<del>(1)</del>）。</p>
+</li>
+<li><p>LRANGE <em>key</em> <em>start</em> <em>stop</em><br>返回start~stop之间的列表<br>注意：<strong>start、stop的都是从0开始的</strong>；<strong>start、stop支持负索引，表示从右边开始</strong>；**[start, stop]是闭区间<strong>；</strong>如果start&gt;<br>stop则返回空列表，如果stop超过列表长度则以列表长度为准**。</p>
+</li>
+<li><p>LTRIM <em>key</em> <em>start</em> <em>stop</em><br>只保留指定索引范围内的元素，其它的都删掉<br>注意：<strong>长用来维持列表的总数，例如：只记录最近100条日志记录</strong></p>
+</li>
+<li><p>LREM <em>key</em> <em>count</em> <em>value</em><br><strong>删除列表中指定值的元素，返回实际删除的元素个数</strong><br>当 <strong>count&gt;0</strong> 时，从列表左边开始删除count个值为value的元素；<br>当 <strong>count&#x3D;0</strong> 时，从列表中删除所有值为value的元素；<br>当 <strong>count&lt;0</strong> 时，从列表右边开始删除count个值为value的元素；</p>
+</li>
+<li><p>LINDEX <em>key</em> <em>index</em><br>查询指定索引位置的元素<br>注意：<strong>index同样支持负值，表示从右边开始计数</strong></p>
+</li>
+<li><p>LINDEX <em>key</em> <em>index</em> <em>value</em><br>设置指定索引位置的元素值<br>注意：**由双向链表的特性导致查询的效率并不高，设置的效率O<del>(1)</del>**。</p>
+</li>
+<li><p>RPOPLPUSH <em>source</em> <em>destination</em><br>该命令会从source列表的右边弹出元素，添加到destination列表的左边，整个动作是原子性的。<br>注意：当 <strong>source &#x3D; destination</strong> 时，可以实现轮询任务。</p>
+</li>
+</ol>
+<h4 id="集合类型命令"><a href="#集合类型命令" class="headerlink" title="集合类型命令"></a>集合类型命令</h4><ul>
+<li>常用命令：</li>
+</ul>
+<ol>
+<li><p>SADD &#x2F; SREM <em>key</em> <em>member</em> [<em>member</em> …]<br>向集合中添加&#x2F;删除一个或多个元素，当元素已存在&#x2F;不存在则忽略本次操作，返回值为有效插入&#x2F;删除的元素个数。</p>
+</li>
+<li><p>SMEMBERS <em>key</em><br>返回集合中所有元素</p>
+</li>
+<li><p>SISMEMBER <em>key</em> <em>member</em><br>判断元素是否存在，key或member不存在时返回0；否则返回1</p>
+</li>
+<li><p>SDIFF &#x2F; SINTER &#x2F; SUNION <em>key</em> [<em>key</em> …]<br>集合差、交、并集运算，返回运算后的集合<br>注意：<strong>当其中某个key对应的集合不存在时，则当成空集合{}处理</strong></p>
+</li>
+<li><p>SCARD <em>key</em><br>获取集合中元素的个数</p>
+</li>
+<li><p>SDIFFSTORE &#x2F; SINTERSTORE &#x2F; SUNIONSTORE <em>destination</em> <em>key</em> [<em>key</em> …]<br>用法和SDIFF &#x2F; SINTER &#x2F; SUNION ，区别在于可以把结果存在destination中，返回新集合的元素个数。</p>
+</li>
+<li><p>SRANDMEMBER <em>key</em> [<em>count</em>]<br><strong>随机获取count个的集合元素，count为空则默认为1</strong><br>当 <strong>count&gt;&#x3D;0</strong> 时，随机从集合中获取 min( <em>count</em> , <em>length</em> ) 个不重复元素<br>当 <strong>count&lt;0</strong> 时，随机从集合中获取 min( |<em>count</em>| , <em>length</em> ) 个可重复元素<br>注意：这里的随机是伪随机，由集合的数据结构决定的；<strong>集合采用典型的数组+链表（拉链法）形势存储。随机只在数组层面，当同一个hash桶中元素较多是，则其中的元素被选中的几率就会较低</strong>。</p>
+</li>
+<li><p>SPOP <em>key</em><br>从集合中 <em><strong>随机</strong></em> 弹出一个元素（数据结构导致的无序性），返回被弹出的元素。</p>
+</li>
+</ol>
+<h4 id="有序集合类型命令"><a href="#有序集合类型命令" class="headerlink" title="有序集合类型命令"></a>有序集合类型命令</h4><ul>
+<li>常用命令：</li>
+</ul>
+<ol>
+<li><p>ZADD <em>key</em> <em>score</em> <em>member</em> [<em>score</em> <em>member</em>]<br>向有序集合中增加一个元素和该元素的分数，如果该元素已经存在则替换原有元素的分数。<br>注意：score分数可以支持双精度浮点数（+inf&#x2F;-inf表示正无穷，负无穷）。</p>
+</li>
+<li><p>ZSCORE <em>key</em> <em>member</em><br>获得元素分数，元素不存在的时，返回nil</p>
+</li>
+<li><p>ZRANGE &#x2F; ZREVRANGE <em>key</em> <em>start</em> <em>stop</em> [<em>WITHSCORES</em>]<br>按照元素分数<strong>从小到大</strong>或<strong>从大到小</strong>的顺序（如果分数相同则按照ascii码顺序从小到大排列）返回索引从 start 到 stop 之间的所有元素，如果需要同时返回分数则添加WITHSCORES参数。<br>注意：<strong>时间复杂度为O(log n+m)，n为集合元素个数，m为返回的元素个数</strong>。</p>
+</li>
+<li><p>ZRANGEBYSCORE &#x2F; ZREVRANGEBYSCORE <em>key</em> <em>min</em> <em>max</em> [<em>WITHSCORES</em>] [<em>LIMIT</em> <em>offset</em> <em>count</em>]<br>按照元素分数<strong>从小到大</strong>或<strong>从大到小</strong>的顺序（如果分数相同则按照ascii码顺序从小到大排列）返回索引从 start 到 stop 之间的所有元素分值在 min 和 max 之间（包含 min 和 max）的元素。</p>
+</li>
+<li><p>ZINCRBY <em>key</em> <em>increment</em> <em>member</em><br>增加某个元素的分支，步长为 increment 。</p>
+</li>
+<li><p>ZCARD <em>key</em><br>获得集合中元素的个数</p>
+</li>
+<li><p>ZCOUNT  <em>key</em> <em>min</em> <em>max</em><br>获得指定分数范围内的元素个数，[<em>min</em>, <em>max</em>] 闭区间。</p>
+</li>
+<li><p>ZREM <em>key</em> <em>member</em> [<em>member</em> …]<br>删除一个或多个元素，返回删除成功的元素个数</p>
+</li>
+<li><p>ZREMRANGEBYRANK <em>key</em> <em>start</em> <em>stop</em><br>删除处于索引 [<em>start</em>, <em>stop</em>] 范围内的所有元素，返回删除的元素数量</p>
+</li>
+<li><p>ZREMRANGEBYSCORE <em>key</em> <em>min</em> <em>max</em><br>删除处于分数 [<em>min</em>, <em>max</em>] 范围内的所有元素，返回删除的元素数量</p>
+</li>
+<li><p>ZRANK <em>key</em> <em>member</em><br>获得元素排名，从小到大排列，返回从0开始的排名</p>
+</li>
+<li><p>ZINTERSTORE <em>destination</em> <em>numkeys</em> <em>key</em> [<em>key</em> …] [<em>WEIGHTS</em> <em>weight</em> [<em>weight</em> …]] [<em>AGGREGATE</em> <em>SUM</em> | *<br>MIN* | <em>MAX</em>]<br>计算有序集合交集，结果存入destination中。</p>
+</li>
+</ol>
+<h4 id="HyperLogLog命令"><a href="#HyperLogLog命令" class="headerlink" title="HyperLogLog命令"></a>HyperLogLog命令</h4><ol>
+<li><p>PFADD <em>key</em> [<em>element</em> [<em>element</em> …]]<br>向集合中添加一个或多个元素，返回添加成功的元素个数<br>注意：<strong>HyperLogLog属于Set的高级数据结构，主要用来对大量数据做统计（例如：网站的UV，PV数据统计），存在一定误差。好处是相对Set结构节省了大量的存储空间</strong></p>
+</li>
+<li><p>PFCOUNT <em>key</em><br>统计元素个数</p>
+</li>
+<li><p>PFMERGE <em>destkey</em> <em>sourcekey</em> [<em>sourcekey</em> …]<br>累加指定一个或多个源key的元素个数，存放到目标key中</p>
+</li>
+</ol>
+<h4 id="GeoHash命令（地图坐标）"><a href="#GeoHash命令（地图坐标）" class="headerlink" title="GeoHash命令（地图坐标）"></a>GeoHash命令（地图坐标）</h4><ol>
+<li><p>GEOADD <em>key</em> <em>longitude</em> <em>latitude</em> <em>member</em> [<em>longitude</em> <em>latitude</em> <em>member</em> …]<br>添加GEO坐标键值</p>
+</li>
+<li><p>GEODIST <em>key</em> <em>member1</em> <em>member2</em> [<em>M</em>|<em>KM</em>|<em>FT</em>|<em>MI</em>]<br>计算两个坐标点之间的距离，M：米，KM：千米，FT：英里，MI：尺</p>
+</li>
+<li><p>GEOPOS <em>key</em> <em>member</em> [<em>member</em> …]<br>获取一个或多个元素的经纬度坐标<br>注意：<strong>获取到的经纬度和add的有些区别，是因为一维映射存在一定精度损失</strong></p>
+</li>
+<li><p>GEOHASH  <em>key</em> <em>member</em> [<em>member</em> …]<br>获取经纬度的一维映射值（base32编码）<br>注意：<strong>此值可以到<a target="_blank" rel="noopener" href="http://geohash.org/$%7Bhash%7D%E8%A7%A3%E7%A0%81%E5%B9%B6%E6%9F%A5%E7%9C%8B%E5%9C%B0%E5%9B%BE%E4%B8%8A%E7%9A%84%E5%AE%9E%E9%99%85%E5%9D%90%E6%A0%87">http://geohash.org/${hash}解码并查看地图上的实际坐标</a></strong></p>
+</li>
+<li><p>GEORADIUS  <em>key</em> <em>longitude</em> <em>latitude</em> <em>radius</em> <em>M</em>|<em>KM</em>|<em>FT</em>|<em>MI</em> [<em>WITHCOORD</em>] [<em>WITHDIST</em>] [<em>WITHHASH</em>] [*<br>COUNT* <em>count</em> [<em>ANY</em>]] [<em>ASC</em>|<em>DESC</em>]<br>查询距离指定坐标 <em>radius</em> 范围内符合条件的所有元素</p>
+</li>
+<li><p>GEORADIUSBYMEMBER <em>key</em> <em>member</em> <em>radius</em> <em>M</em>|<em>KM</em>|<em>FT</em>|<em>MI</em> [<em>WITHCOORD</em>] [<em>WITHDIST</em>] [<em>WITHHASH</em>] [<em>COUNT</em> *<br>count* [<em>ANY</em>]] [<em>ASC</em>|<em>DESC</em>] [<em>STORE</em> <em>key</em>] [<em>STOREDIST</em> <em>key</em>]<br>和上面GEORADIUS的用法一致，距离计算对象为内部元素</p>
+</li>
+</ol>
+<h4 id="排序命令"><a href="#排序命令" class="headerlink" title="排序命令"></a>排序命令</h4><ol>
+<li>SORT … BY ASC | DESC LIMIT</li>
+</ol>
+<h3 id="事务特性"><a href="#事务特性" class="headerlink" title="事务特性"></a>事务特性</h3><p>Redis事务无法满足ACID原则中的一致性和持久性原则。当Redis开启事务后，遇到以下两种场景时的处理：</p>
+<ol>
+<li>语法错误：（可以静态检测出来的），将放弃所有操作；保证了事务的原子性。</li>
+<li>运行错误：（例如：操作命令与类型不匹配），将记录执行错误命令的后续命令且Redis不提供 <strong>rollback</strong> 回滚操作；无法保证一致性。</li>
+</ol>
+<p>Redis事务的弊端：</p>
+<ol>
+<li>所有命令一起执行，无法把上一个命令的结果作为下一个命令的入参。</li>
+<li>无法再多个命令之间穿插业务代码（<em>待定</em>…）。</li>
+<li>运行出现错误后通过 <strong>rollback</strong> 恢复，需要自行处理。</li>
+</ol>
+<p><em><strong>官方推荐用redis lua执行事务既支持原子性操作，也支持报错回滚</strong></em>。</p>
+<ul>
+<li>关于普通命令、管道命令、事务命令以及lua脚本命令之间的区别，参考：<a href="#command_distinction">普通命令、管道命令、事务命令及lua脚本命令的区别</a></li>
+</ul>
+<h3 id="订阅发布"><a href="#订阅发布" class="headerlink" title="订阅发布"></a>订阅发布</h3><p><strong>订阅&#x2F;发布</strong> 模式中包含两个角色，分别为发布者和订阅者。订阅者可以订阅一个或多个频道（channel），而发布者可以向指定的频道发送消息，所有订阅此频道的订阅者都会收到此消息。</p>
+<h4 id="相关命令"><a href="#相关命令" class="headerlink" title="相关命令"></a>相关命令</h4><ul>
+<li><p>PUBLISH <em>channel</em> <em>message</em><br>发布消息命令：channel为频道（mq里面一般叫topic），message为发送的消息内容需要用引号括起来。发布消息成功后返回值为收到消息的订阅者数量。<br>注意：<strong>Redis中发布的消息即使没有订阅者消费，不会被持久化</strong>。</p>
+</li>
+<li><p>SUBSCRIBE <em>channel</em> [<em>channel</em> …]<br>订阅一个或多个频道<br>注意：收到的消息分三行，第一行为消息类型，有【subscribe | message | unsubscribe】三种可能性。</p>
+</li>
+<li><p>PSUBSCRIBE <em>channel-pattern</em><br>支持通配符订阅</p>
+</li>
+<li><p>UNSUBSCRIBE [<em>channel</em> [<em>channel</em> …]]<br>取消一个或多个频道订阅，不填channel则表示取消所有订阅</p>
+</li>
+<li><p>PUNSUBSCRIBE [<em>channel-pattern</em> [<em>channel-pattern</em> …]]<br>支持通配符取消订阅</p>
+</li>
+</ul>
+<h3 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 备份redis的两种方式</span></span><br><span class="line">redis 127.0.0.1:6379&gt; SAVE </span><br><span class="line">OK</span><br><span class="line"><span class="comment"># 或</span></span><br><span class="line">127.0.0.1:6379&gt; bgsave</span><br><span class="line">Background saving started</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看备份目录（例：dump.rdb）</span></span><br><span class="line">127.0.0.1:6379&gt; config get <span class="built_in">dir</span></span><br><span class="line">1) <span class="string">&quot;dir&quot;</span></span><br><span class="line">2) <span class="string">&quot;/usr/local/redis-6.2.6/src&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 恢复数据，只需要把恢复数据的文件放到$(config get dir)对应的目录下&amp;&amp;重启服务即可</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置登录密码（这种方式，重启服务端后就会失效）</span></span><br><span class="line">127.0.0.1:6379&gt; config <span class="built_in">set</span> requirepass 123456</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; config get <span class="built_in">dir</span></span><br><span class="line">(error) NOAUTH Authentication required.</span><br><span class="line">127.0.0.1:6379&gt; auth 123456</span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; config get <span class="built_in">dir</span></span><br><span class="line">1) <span class="string">&quot;dir&quot;</span></span><br><span class="line">2) <span class="string">&quot;/usr/local/redis-6.2.6/src&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 删除登录密码（这种方式，重启服务端后就会失效）</span></span><br><span class="line">127.0.0.1:6379&gt; config <span class="built_in">set</span> requirepass <span class="string">&#x27;&#x27;</span></span><br><span class="line">OK</span><br><span class="line">127.0.0.1:6379&gt; config get <span class="built_in">dir</span></span><br><span class="line">1) <span class="string">&quot;dir&quot;</span></span><br><span class="line">2) <span class="string">&quot;/usr/local/redis-6.2.6/src&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="常用配置"><a href="#常用配置" class="headerlink" title="常用配置"></a>常用配置</h3><p>根目录下redis.conf文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 设置登录密码，注意：行前不能有空格（指定配置文件，重启后也有效）</span></span><br><span class="line"><span class="comment"># requirepass foobared</span></span><br><span class="line">requirepass 123456</span><br><span class="line"></span><br><span class="line"><span class="comment"># 修改分区数量，默认为n=16，区间：[0,n-1]；当n=1时，只有一个分区</span></span><br><span class="line">databases 1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 绑定redis的端口</span></span><br><span class="line"><span class="comment"># bind 127.0.0.1 -::1  // 只允许回环网卡访问，即只允许本地客户端访问</span></span><br><span class="line"><span class="built_in">bind</span> * -::*</span><br><span class="line"></span><br><span class="line"><span class="comment"># 开放防火墙对应端口</span></span><br><span class="line">firewall-cmd --zone=public --add-port=6379/tcp --permanent</span><br><span class="line">firewall-cmd --reload</span><br></pre></td></tr></table></figure>
+
+<h3 id="持久化机制"><a href="#持久化机制" class="headerlink" title="持久化机制"></a>持久化机制</h3><p>为了防止数据因为故障而丢失，这种机制就叫持久化机制。Redis的持久化机制有两种（4.0+以后默认两种方式搭配使用）：</p>
+<ul>
+<li><strong>RDB：</strong> 内存数据的二进制序列化形式，格式上非常紧凑。</li>
+<li><strong>AOF：</strong> 内存数据的修改修改指令记录，可能会随着时间变得非常庞大（通过重写的方式进行瘦身）。</li>
+</ul>
+<h4 id="RDB-Redis-DataBase"><a href="#RDB-Redis-DataBase" class="headerlink" title="RDB(Redis DataBase)"></a>RDB(Redis DataBase)</h4><p>RDB持久化是指在指定的时间间隔内将内存中的数据集快照写入磁盘。也是默认的持久化方式，这种方式是就是将内存中数据以快照的方式写入到二进制文件中,默认的文件名为dump.rdb。</p>
+<h5 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h5><ol>
+<li>开启子线程（save方式则直接在主线程中进行，无需开启子线程），接手快照持久化任务。</li>
+<li>利用操作系统COW（copy on write）写时复制机制进行Redis进程共享数据段的读操作：<ol>
+<li>内存数据都是由4k的数据页组成，当主线程发生对数据的写操作时，先把涉及到的页面复制一份，然后在上面进行修改操作。</li>
+<li>由此可见占用的内存最大为快照的两倍，实际上会发生复制动作只有一些热数据。冷数据还是只有一份，所以内存占用一般都是小于2倍的。</li>
+</ol>
+</li>
+<li>子线程在fork出来的瞬间，所看到的数据就已经固化了，这就是这种持久化方式也叫快照的原因。</li>
+</ol>
+<h5 id="触发方式"><a href="#触发方式" class="headerlink" title="触发方式"></a>触发方式</h5><h6 id="save命令"><a href="#save命令" class="headerlink" title="save命令"></a>save命令</h6><p>save命令：会阻塞主线程，期间redis无法处理其他命令，知道保存操作执行完成（注：如果已经存在dump.rdb文件则直接覆盖老的）。</p>
+<p><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/27e2a76dcafa471da0b1f8dfee652c62.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<h6 id="bgsave命令"><a href="#bgsave命令" class="headerlink" title="bgsave命令"></a>bgsave命令</h6><p>bgsave命令：后台异步进行快照操作，快照同时还可以响应客户端请求（注：通过内部创建子线程方式执行保存操作，redis内部大多都采用bgsave命令；例如”自动触发”方式，就是采用bgsave命令实现的）。</p>
+<p><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/eae07e9f99194ec9a5fa52b34b668c0e.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<h6 id="自动触发"><a href="#自动触发" class="headerlink" title="自动触发"></a>自动触发</h6><p>自动触发：通过配置文件中的配置项实现定时快照。</p>
+<p>save命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">################################ SNAPSHOTTING  ################################</span></span><br><span class="line"><span class="comment"># redis会在发生第二个参数指定个数的key发生变化的后第一个参数指定的描述后执行保存动作</span></span><br><span class="line"><span class="comment"># 保存database数据到磁盘，命令格式：</span></span><br><span class="line"><span class="comment"># save &lt;seconds&gt; &lt;changes&gt;</span></span><br><span class="line"><span class="comment"># </span></span><br><span class="line"><span class="comment"># 通过设置空字符串参数禁用快照保存动作（或直接注释save行），如下：</span></span><br><span class="line"><span class="comment"># save &quot;&quot;</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># Unless specified otherwise, by default Redis will save the DB:</span></span><br><span class="line"><span class="comment">#   * After 3600 seconds (an hour) if at least 1 key changed</span></span><br><span class="line"><span class="comment">#   * After 300 seconds (5 minutes) if at least 100 keys changed</span></span><br><span class="line"><span class="comment">#   * After 60 seconds if at least 10000 keys changed</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># 可以通过取消注释下面的三行来显式地设置这些内容</span></span><br><span class="line"><span class="comment"># save 3600 1</span></span><br><span class="line"><span class="comment"># save 300 100</span></span><br><span class="line"><span class="comment"># save 60 10000</span></span><br></pre></td></tr></table></figure>
+
+<p>stop-writes-on-bgsave-error选项：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 默认值为yes。当启用了RDB且最后一次后台保存数据失败，Redis是否停止接收数据。</span></span><br><span class="line"><span class="comment"># 这会让用户意识到数据没有正确持久化到磁盘上，否则没有人会注意到灾难（disaster）发生了。</span></span><br><span class="line"><span class="comment"># 如果Redis重启了，那么又可以重新开始接收数据了</span></span><br><span class="line">stop-writes-on-bgsave-error <span class="built_in">yes</span></span><br></pre></td></tr></table></figure>
+
+<p>rdbcompression选项：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 默认值是yes。对于存储到磁盘中的快照，可以设置是否进行压缩存储。</span></span><br><span class="line">rdbcompression <span class="built_in">yes</span></span><br></pre></td></tr></table></figure>
+
+<p>rdbchecksum选项：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 默认值是yes。在存储快照后，我们还可以让redis使用CRC64算法来进行数据校验，但是这样做会增加大约10%的性能消耗，如果希望获取到最大的性能提升，可以关闭此功能。</span></span><br><span class="line">rdbchecksum <span class="built_in">yes</span></span><br></pre></td></tr></table></figure>
+
+<p>dbfilename参数：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 设置快照的文件名，默认是 dump.rdb</span></span><br><span class="line">dbfilename dump.rdb</span><br></pre></td></tr></table></figure>
+
+<p>dir参数：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 设置快照文件的存放路径，这个配置项一定是个目录，而不能是文件名。</span></span><br><span class="line"><span class="built_in">dir</span> ./</span><br></pre></td></tr></table></figure>
+
+<p>save命令与bgsave命令对比图：<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/30524bce99a74791af9791d187445819.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<h6 id="RDB的优势和劣势"><a href="#RDB的优势和劣势" class="headerlink" title="RDB的优势和劣势"></a>RDB的优势和劣势</h6><ol>
+<li><p>优势</p>
+<ul>
+<li>RDB文件紧凑，全量备份，非常适合用于进行备份和灾难恢复。</li>
+<li>生成RDB文件的时候，redis主进程会fork()一个子进程来处理所有保存工作，主进程不需要进行任何磁盘IO操作。</li>
+<li>RDB 在恢复大数据集时的速度比 AOF 的恢复速度要快。</li>
+</ul>
+</li>
+<li><p>劣势</p>
+<ul>
+<li>RDB快照是一次全量备份，存储的是内存数据的二进制序列化形式，存储上非常紧凑。当进行快照持久化时，会开启一个子进程专门负责快照持久化，子进程会拥有父进程的内存数据，父进程修改内存子进程不会反应出来，所以在快照持久化期间修改的数据不会被保存，可能丢失数据。</li>
+</ul>
+</li>
+</ol>
+<h4 id="AOF-Append-Only-File"><a href="#AOF-Append-Only-File" class="headerlink" title="AOF(Append Only File)"></a>AOF(Append Only File)</h4><p>全量备份总是耗时的，有时候我们提供一种更加高效的方式AOF，工作机制很简单，redis会将每一个收到的写命令都通过write函数追加到文件中。<br>通俗的理解就是日志记录。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># aof策略的开关，可以与rdb同时工作（注：重启时优先从aof文件恢复，数据更完整）</span></span><br><span class="line">appendonly no</span><br><span class="line"><span class="comment"># aof策略的文件名 (默认: &quot;appendonly.aof&quot;，目录同样通过dir参数配置)</span></span><br><span class="line">appendfilename <span class="string">&quot;appendonly.aof&quot;</span></span><br><span class="line"><span class="comment"># aof策略的记录间隔</span></span><br><span class="line"><span class="comment"># 例： always   每次就该都记录</span></span><br><span class="line"><span class="comment">#     everysec 每秒一次</span></span><br><span class="line"><span class="comment">#     no       从不同步</span></span><br><span class="line">appendfsync everysec</span><br><span class="line"><span class="comment"># 当执行bgrewriteaof时，并发执行aof会发生磁盘竞争问题；</span></span><br><span class="line"><span class="comment"># 当no-appendfsync-on-rewrite=no时，相当于执行bgrewriteaof期间appendonly=no；aof只写数据到AOF重写缓存区（aof_rewrite_bug）不写到磁盘，如果此时redis进行挂了则会导致大量数据丢失</span></span><br><span class="line">no-appendfsync-on-rewrite no</span><br><span class="line"><span class="comment"># 控制AOF重写缓存区（aof_rewrite_bug）每次只能写32m的数据到磁盘，避免在重写期间大量数据写到aof_rewrite_bug，同步到磁盘是瞬间大量的磁盘IO造成硬盘阻塞</span></span><br><span class="line">aof-rewrite-incremental-fsync <span class="built_in">yes</span></span><br><span class="line"><span class="comment"># 同上RDB方式</span></span><br><span class="line">rdb-save-incremental-fsync <span class="built_in">yes</span></span><br><span class="line"><span class="comment"># 当AOF文件大小超过上一次重写时的AOF文件大小的百分之多少时会再次进行重写，如果之前没有重写过，则以启动时的AOF文件大小为依据</span></span><br><span class="line">auto-aof-rewrite-percentage 100</span><br><span class="line"><span class="comment"># 允许重写的最小AOF文件大小配置写入AOF文件后，要求系统刷新硬盘缓存的机制</span></span><br><span class="line">auto-aof-rewrite-min-size 64mb</span><br><span class="line"><span class="comment"># redis在恢复时，会忽略最后一条可能存在问题的指令。默认值yes。即在aof写入时，可能存在指令写错的问题(突然断电，写了一半)，这种情况下，yes会log并继续，而no会直接恢复失败.</span></span><br><span class="line">aof-load-truncated <span class="built_in">yes</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="实现原理-1"><a href="#实现原理-1" class="headerlink" title="实现原理"></a>实现原理</h5><h6 id="实现原理图"><a href="#实现原理图" class="headerlink" title="实现原理图"></a>实现原理图</h6><p><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/cf41bd4c2ccf4df4ba23abb970b9fa56.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"> </p>
+<ul>
+<li>每当有一个写命令过来时，就直接保存在我们的AOF文件中。</li>
+</ul>
+<h6 id="文件重写原理"><a href="#文件重写原理" class="headerlink" title="文件重写原理"></a>文件重写原理</h6><p>AOF的方式也同时带来了另一个问题。持久化文件会变的越来越大。为了压缩aof的持久化文件。redis提供了bgrewriteaof命令。将内存中的数据以命令的方式保存到临时文件中，同时会fork出一条新进程来将文件重写。<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/518a858e0b474a18bbaa3eaf75a4b964.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"><br>重写aof文件的操作，并没有读取旧的aof文件，而是将整个内存中的数据库内容用命令的方式重写了一个新的aof文件，这点和快照有点类似。</p>
+<ol>
+<li>fork一个子线程对内存中的数据遍历生成对应的指令记录（A-&gt;B-&gt;A改写成A；失效的数据将不记录在内，能显著减少AOF文件的体积）。</li>
+<li>把发生在遍历期间的增量旧的AOF日志追加到新生成的AOF文件中。</li>
+<li>用新生成的AOF文件替换旧的AOF文件。</li>
+</ol>
+<h5 id="触发方式-1"><a href="#触发方式-1" class="headerlink" title="触发方式"></a>触发方式</h5><h6 id="AOF也有三种触发机制"><a href="#AOF也有三种触发机制" class="headerlink" title="AOF也有三种触发机制"></a>AOF也有三种触发机制</h6><ol>
+<li>每修改同步always：同步持久化 每次发生数据变更会被立即记录到磁盘 性能较差但数据完整性比较好</li>
+<li>每秒同步everysec：异步操作，每秒记录 如果一秒内宕机，有数据丢失</li>
+<li>不同no：从不同步<br>   <img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/dc8bac3589da455da97aa45410b30c55.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></li>
+</ol>
+<h6 id="AOF的优势和劣势"><a href="#AOF的优势和劣势" class="headerlink" title="AOF的优势和劣势"></a>AOF的优势和劣势</h6><ol>
+<li>优势<ol>
+<li>AOF可以更好的保护数据不丢失，一般AOF会每隔1秒，通过一个后台线程执行一次fsync操作，最多丢失1秒钟的数据。（2）AOF日志文件没有任何磁盘寻址的开销，写入性能非常高，文件不容易破损。</li>
+<li>AOF日志文件即使过大的时候，出现后台重写操作，也不会影响客户端的读写。</li>
+<li>AOF日志文件的命令通过非常可读的方式进行记录，这个特性非常适合做灾难性的误删除的紧急恢复。比如某人不小心用flushall命令清空了所有数据，只要这个时候后台rewrite还没有发生，那么就可以立即拷贝AOF文件，将最后一条flushall命令给删了，然后再将该AOF文件放回去，就可以通过恢复机制，自动恢复所有数据</li>
+</ol>
+</li>
+<li>劣势<ol>
+<li>对于同一份数据来说，AOF日志文件通常比RDB数据快照文件更大</li>
+<li>AOF开启后，支持的写QPS会比RDB支持的写QPS低，因为AOF一般会配置成每秒fsync一次日志文件，当然，每秒一次fsync，性能也还是很高的</li>
+<li>以前AOF发生过bug，就是通过AOF记录的日志，进行数据恢复的时候，没有恢复一模一样的数据出来。</li>
+</ol>
+</li>
+</ol>
+<h4 id="RDB和AOF该如何选择？"><a href="#RDB和AOF该如何选择？" class="headerlink" title="RDB和AOF该如何选择？"></a>RDB和AOF该如何选择？</h4><p>选择的话，两者加一起才更好。因为两个持久化机制你明白了，剩下的就是看自己的需求了，需求不同选择的也不一定，但是通常都是结合使用。有一张图可供总结：<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/309f6de9ea6b4b8eb972e2fc2e469f35.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<h4 id="RDB-AOF混合持久化（redis-4-0-提供）"><a href="#RDB-AOF混合持久化（redis-4-0-提供）" class="headerlink" title="RDB-AOF混合持久化（redis 4.0+提供）"></a>RDB-AOF混合持久化（redis 4.0+提供）</h4><p>略，待补充…</p>
+<h3 id="内存回收策略和Key过期策略"><a href="#内存回收策略和Key过期策略" class="headerlink" title="内存回收策略和Key过期策略"></a>内存回收策略和Key过期策略</h3><h4 id="限制内存使用"><a href="#限制内存使用" class="headerlink" title="限制内存使用"></a>限制内存使用</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 我们都知道如果我们要设置 Redis 的最大内存大小只需要在配置文件redis.conf 中配 # 置一行 maxmemory xxx 即可，或者我们通过 config set 命令在运行时动态配置 </span></span><br><span class="line"><span class="comment"># Redis 的内存大小。</span></span><br><span class="line">maxmemory &lt;bytes&gt;</span><br><span class="line"><span class="comment"># 那么当 Redis 内存不够的时候，我们要知道 Redis 是根据什么策略来淘汰数据的</span></span><br><span class="line"><span class="comment"># 我们可以看到策略的值由如下几种：</span></span><br><span class="line"><span class="comment">#   volatile-lru: 在所有带有过期时间的 key 中使用 LRU 算法淘汰数据；</span></span><br><span class="line"><span class="comment">#   alkeys-lru: 在所有的 key 中使用最近最少被使用 LRU 算法淘汰数据，保证新加入的数据正常；</span></span><br><span class="line"><span class="comment">#   volatile-random: 在所有带有过期时间的 key 中随机淘汰数据；</span></span><br><span class="line"><span class="comment">#   allkeys-random: 在所有的 key 中随机淘汰数据；</span></span><br><span class="line"><span class="comment">#   volatile-ttl: 在所有带有过期时间的 key 中，淘汰最早会过期的数据；</span></span><br><span class="line"><span class="comment">#   noeviction: 不回收，当达到最大内存的时候，在增加新数据的时候会返回 error，不会清除旧数据，这是 Redis 的默认策略；</span></span><br><span class="line"><span class="comment"># volatile-lru,volatile-random,volatile-ttl这几种情况在Redis中没有带有过期 Key 的时候跟 noeviction 策略是一样的。淘汰策略是可以动态调整的，调整的时候是不需要重启的，原文是这样说的，我们可以根据自己 Redis 的模式来动态调整策略</span></span><br><span class="line">maxmemory-policy noeviction</span><br><span class="line"><span class="comment"># LRU，LFU算法的近似采样数量；之所以不采样实际的 LRU 算法，是因为会耗费很多的内存</span></span><br><span class="line">maxmemory-samples 5</span><br></pre></td></tr></table></figure>
+
+<h4 id="策略的执行过程"><a href="#策略的执行过程" class="headerlink" title="策略的执行过程"></a>策略的执行过程</h4><ol>
+<li>客户端运行命令，添加数据申请内存；</li>
+<li>Redis 会检查内存的使用情况，如果已经超过的最大限制，就是根据配置的内存淘汰策略去淘汰相应的 key，从而保证新数据正常添加；</li>
+<li>继续执行命令。</li>
+</ol>
+<h5 id="LRU缓存"><a href="#LRU缓存" class="headerlink" title="LRU缓存"></a>LRU缓存</h5><p>像浏览器的缓存策略、memcached的缓存策略都是使用LRU这个算法，LRU算法会将近期最不会访问的数据淘汰掉。LRU如此流行的原因是实现比较简单，而且对于实际问题也很实用，良好的运行时性能，命中率较高。下面谈谈如何实现LRU缓存：<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/857b2f07dc88460aa119b2a8130a1c17.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_12,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"></p>
+<ul>
+<li>新数据插入到链表头部</li>
+<li>每当缓存命中（即缓存数据被访问），则将数据移到链表头部</li>
+<li>当链表满的时候，将链表尾部的数据丢弃</li>
+</ul>
+<p>LRU Cache具备的操作：</p>
+<ul>
+<li><p>set(key,value)<br>：如果key在hashmap中存在，则先重置对应的value值，然后获取对应的节点cur，将cur节点从链表删除，并移动到链表的头部；若果key在hashmap不存在，则新建一个节点，并将节点放到链表的头部。当Cache存满的时候，将链表最后一个节点删除即可。</p>
+</li>
+<li><p>get(key)：如果key在hashmap中存在，则把对应的节点放到链表头部，并返回对应的value值；如果不存在，则返回-1。</p>
+</li>
+</ul>
+<p><strong>LRU</strong> 是最近最少使用页面置换算法(Least Recently Used),也就是首先淘汰最长时间未被使用的页面!</p>
+<p><strong>LFU</strong> 是最近最不常用页面置换算法(Least Frequently Used),也就是淘汰一定时期内被访问次数最少的页!</p>
+<h5 id="所有策略"><a href="#所有策略" class="headerlink" title="所有策略"></a>所有策略</h5><ul>
+<li><strong>volatile-lru：</strong> 在内存不足时，Redis会再设置过了生存时间的key中干掉一个最近最少使用的key。</li>
+<li><strong>allkeys-lru：</strong> 在内存不足时，Redis会在全部的key中干掉一个最近最少使用的key。</li>
+<li><strong>volatile-lfu：</strong> 在内存不足时，Redis会再设置过了生存时间的key中干掉一个最近最少频次使用的key。</li>
+<li><strong>allkeys-lfu：</strong> 在内存不足时，Redis会再全部的key中干掉一个最近最少频次使用的key。</li>
+<li><strong>volatile-random：</strong> 在内存不足时，Redis会再设置过了生存时间的key中随机干掉一个。</li>
+<li><strong>allkeys-random：</strong> 在内存不足时，Redis会再全部的key中随机干掉一个。</li>
+<li><strong>volatile-ttl：</strong> 在内存不足时，Redis会再设置过了生存时间的key中干掉一个剩余生存时间最少的key。</li>
+<li><strong>noeviction：</strong> 在内存不足时，只读不能写 <strong>（默认）</strong> 。</li>
+</ul>
+<blockquote>
+<p><strong>建议使用：volatile-lru。这种是性能和安全之间最协调的。</strong></p>
+</blockquote>
+<h4 id="如何清除带有过期时间的-key"><a href="#如何清除带有过期时间的-key" class="headerlink" title="如何清除带有过期时间的 key"></a>如何清除带有过期时间的 key</h4><h5 id="定时策略"><a href="#定时策略" class="headerlink" title="定时策略"></a>定时策略</h5><blockquote>
+<p>给每个 key 加一个定时器，这样当时间到达过期时间的时候就自动删除 key</p>
+</blockquote>
+<p><strong>弊端：</strong><br>这种方式对内存是友好的，因为可以及时清理过期的可以，但是由于每个带有过期时间的 key 都需要一个定时器，所以这种方式对 CPU 是不友好的，会占用很多的 CPU，另外这种方式是一种主动的行为。</p>
+<h5 id="惰性策略"><a href="#惰性策略" class="headerlink" title="惰性策略"></a>惰性策略</h5><blockquote>
+<p>每次访问一个 key 的时候再去判断这个 key 是否到达过期时间了，过期了就删除掉</p>
+</blockquote>
+<p><strong>弊端：</strong><br>这种方式对 CPU 是友好的，但是对应的也有一个问题，就是如果这些过期的 key 我们再也不会访问，那么永远就不会删除了。</p>
+<h5 id="折中策略"><a href="#折中策略" class="headerlink" title="折中策略"></a>折中策略</h5><blockquote>
+<p>服务器在真正实现的时候上面的两种方式都会用到，这样就可以得到一种折中的方式。</p>
+</blockquote>
+<p><strong>优化：</strong><br>对“定时策略”进行了变异，每秒执行如下步骤：</p>
+<ol>
+<li>在过期的key中随机抽取20个key</li>
+<li>删除其中过期的key</li>
+<li>如果过期的key&#x2F;20 &gt; 25%，则重复步骤1（最多10次）</li>
+</ol>
+<p><strong>结论：</strong><br>依赖key过期事件触发通知执行定时任务“不可靠”</p>
+<h3 id="性能测试"><a href="#性能测试" class="headerlink" title="性能测试"></a>性能测试</h3><p>redis-benchmark在编译后的根目录下：.&#x2F;src&#x2F;</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost src]<span class="comment"># ./redis-benchmark -n 10000 -q</span></span><br><span class="line">ERROR: NOAUTH Authentication required.</span><br><span class="line">ERROR: failed to fetch CONFIG from 127.0.0.1:6379</span><br><span class="line">[root@localhost src]<span class="comment"># ./redis-benchmark -n 10000 -a 654321  -q</span></span><br><span class="line">PING_INLINE: 64102.56 requests per second, p50=0.519 msec         </span><br><span class="line">PING_MBULK: 61349.69 requests per second, p50=0.511 msec                   </span><br><span class="line">SET: 64935.07 requests per second, p50=0.503 msec</span><br><span class="line">GET: 62500.00 requests per second, p50=0.519 msec                  </span><br><span class="line">INCR: 58479.53 requests per second, p50=0.527 msec                   </span><br><span class="line">LPUSH: 59523.81 requests per second, p50=0.527 msec</span><br><span class="line">RPUSH: 66225.17 requests per second, p50=0.511 msec                  </span><br><span class="line">LPOP: 59171.60 requests per second, p50=0.551 msec                   </span><br><span class="line">RPOP: 64516.13 requests per second, p50=0.543 msec</span><br><span class="line">SADD: 57803.47 requests per second, p50=0.591 msec                  </span><br><span class="line">HSET: 50000.00 requests per second, p50=0.695 msec                   </span><br><span class="line">SPOP: 46296.30 requests per second, p50=0.743 msec                   </span><br><span class="line">ZADD: 37593.98 requests per second, p50=0.951 msec                   </span><br><span class="line">ZPOPMIN: 42735.04 requests per second, p50=0.807 msec                   </span><br><span class="line">LPUSH (needed to benchmark LRANGE): 42194.09 requests per second, p50=0.831 msec                   </span><br><span class="line">LRANGE_100 (first 100 elements): 24096.39 requests per second, p50=1.447 msec                   </span><br><span class="line">LRANGE_300 (first 300 elements): 12004.80 requests per second, p50=2.743 msec                   </span><br><span class="line">LRANGE_500 (first 500 elements): 8223.68 requests per second, p50=3.967 msec                  </span><br><span class="line">LRANGE_600 (first 600 elements): 7007.71 requests per second, p50=4.679 msec                  </span><br><span class="line">MSET (10 keys): 36101.08 requests per second, p50=1.015 msec</span><br></pre></td></tr></table></figure>
+
+<h2 id="普通命令、管道命令、事务命令及Lua脚本命令的区别"><a href="#普通命令、管道命令、事务命令及Lua脚本命令的区别" class="headerlink" title="普通命令、管道命令、事务命令及Lua脚本命令的区别"></a>普通命令、管道命令、事务命令及Lua脚本命令的区别</h2><div id="command_distinction"></div>
+
+<h3 id="命令说明"><a href="#命令说明" class="headerlink" title="命令说明"></a>命令说明</h3><h4 id="普通命令"><a href="#普通命令" class="headerlink" title="普通命令"></a>普通命令</h4><p>只多个原生命令的执行。</p>
+<h4 id="管道命令"><a href="#管道命令" class="headerlink" title="管道命令"></a>管道命令</h4><p>在Redis提供的管道流中多个原生命令一次性发送，并在所有命令执行完一次性获取执行结果（使用限制：多个命令之间不存在返回结果上的依赖）。</p>
+<h4 id="事务命令"><a href="#事务命令" class="headerlink" title="事务命令"></a>事务命令</h4><p>开启事务后执行命令（使用限制：多个命令之间不存在返回结果上的依赖）。</p>
+<h4 id="Lua脚本命令"><a href="#Lua脚本命令" class="headerlink" title="Lua脚本命令"></a>Lua脚本命令</h4><p>以lua脚本粘合多个原生命令，作为一个整体发送到服务器端执行。</p>
+<h3 id="执行流程"><a href="#执行流程" class="headerlink" title="执行流程"></a>执行流程</h3><p>以下为普通、管道、事务类型命令执行流程的对比图：<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/redis/6032eb67602e4960a3bc735a487447f4.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16" alt="执行过程示意图"></p>
+<ul>
+<li><strong>普通命令：</strong> 命令-&gt;结果、命令-&gt;结果；命令会被立即执行，命令与结果之间客户端阻塞，两次命令之间会被其它客户端插入。</li>
+<li><strong>管道命令：</strong> 命令-&gt;结果缓存、命令-&gt;结果缓存，返回结果集合；命令会被立即执行，两次命令之间会被其它客户端插入，见过一次性返回（减少了多次网络传输成本，但是缓存结果会占用服务端的内存资源）。</li>
+<li><strong>事务命令：</strong> 命令缓存、命令缓存、执行-&gt;返回结果；两次命令缓存之间会被其它客户端插入，执行期间不会被插入。</li>
+</ul>
+<h3 id="结果对比"><a href="#结果对比" class="headerlink" title="结果对比"></a>结果对比</h3><h4 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h4><p>相比其它命令，lua脚本命令的优势：</p>
+<ol>
+<li>减少网络开销 ：本来5次网络请求的操作，可以用一个请求完成，原先5次请求的逻辑放在redis服务器上完成。使用脚本，减少了网络往返时延。这点跟管道类似。</li>
+<li>原子操作 ：Redis会将整个脚本作为一个整体执行，中间不会被其他命令插入。管道不是原子的，不过redis的批量操作命令(类似mset)是原子的。</li>
+<li>替代redis的事务功能 ：redis自带的事务功能很鸡肋，报错不支持回滚，而redis的lua脚本几乎实现了常规的事务功能，支持报错回滚操作，官方推荐如果要使用redis的事务功能可以用redis lua替代。</li>
+<li>复用 ：客户端发送的脚本永久存在redis中，其他客户端可以复用脚本</li>
+<li>可嵌入性 ：可嵌入JAVA，C#等多种编程语言，支持不同操作系统跨平台交互</li>
+</ol>
+<h4 id="劣势"><a href="#劣势" class="headerlink" title="劣势"></a>劣势</h4><ol>
+<li>需要学习lua脚本语法</li>
+</ol>
+<h4 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h4><p>不要在Lua脚本中出现死循环和耗时的运算，否则redis会阻塞，将不接受其他的命令， 所以使用时要注意不能出现死循环、耗时的运算。redis是单进程、单线程执行脚本。管道不会阻塞redis。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E7%AC%94%E8%AE%B0/" rel="tag"><i class="fa fa-tag"></i> 笔记</a>
+              <a href="/tags/Redis/" rel="tag"><i class="fa fa-tag"></i> Redis</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/05/28/redis-setup/" rel="prev" title="安装Redis服务">
+      <i class="fa fa-chevron-left"></i> 安装Redis服务
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/05/28/mysql-notes/" rel="next" title="Mysql原理介绍、备忘录等">
+      Mysql原理介绍、备忘录等 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+  </div>
+  
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">软件介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AE%B9%E7%AE%80%E4%BB%8B"><span class="nav-number">2.</span> <span class="nav-text">内容简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E3%80%81%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E3%80%81key%E6%B7%98%E6%B1%B0%E5%8F%8A%E6%8C%81%E4%B9%85%E5%8C%96%E7%AD%96%E7%95%A5"><span class="nav-number">3.</span> <span class="nav-text">数据结构、常用命令、key淘汰及持久化策略</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">3.1.</span> <span class="nav-text">数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">3.1.1.</span> <span class="nav-text">通用命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%B1%BB%E5%9E%8B%E5%91%BD%E4%BB%A4"><span class="nav-number">3.1.2.</span> <span class="nav-text">字符串类型命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%A3%E5%88%97%E7%B1%BB%E5%9E%8B%E5%91%BD%E4%BB%A4"><span class="nav-number">3.1.3.</span> <span class="nav-text">散列类型命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%97%E8%A1%A8%E7%B1%BB%E5%9E%8B%E5%91%BD%E4%BB%A4"><span class="nav-number">3.1.4.</span> <span class="nav-text">列表类型命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9B%86%E5%90%88%E7%B1%BB%E5%9E%8B%E5%91%BD%E4%BB%A4"><span class="nav-number">3.1.5.</span> <span class="nav-text">集合类型命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E7%B1%BB%E5%9E%8B%E5%91%BD%E4%BB%A4"><span class="nav-number">3.1.6.</span> <span class="nav-text">有序集合类型命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HyperLogLog%E5%91%BD%E4%BB%A4"><span class="nav-number">3.1.7.</span> <span class="nav-text">HyperLogLog命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#GeoHash%E5%91%BD%E4%BB%A4%EF%BC%88%E5%9C%B0%E5%9B%BE%E5%9D%90%E6%A0%87%EF%BC%89"><span class="nav-number">3.1.8.</span> <span class="nav-text">GeoHash命令（地图坐标）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8E%92%E5%BA%8F%E5%91%BD%E4%BB%A4"><span class="nav-number">3.1.9.</span> <span class="nav-text">排序命令</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E7%89%B9%E6%80%A7"><span class="nav-number">3.2.</span> <span class="nav-text">事务特性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A2%E9%98%85%E5%8F%91%E5%B8%83"><span class="nav-number">3.3.</span> <span class="nav-text">订阅发布</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E5%91%BD%E4%BB%A4"><span class="nav-number">3.3.1.</span> <span class="nav-text">相关命令</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">3.4.</span> <span class="nav-text">常用命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE"><span class="nav-number">3.5.</span> <span class="nav-text">常用配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6"><span class="nav-number">3.6.</span> <span class="nav-text">持久化机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#RDB-Redis-DataBase"><span class="nav-number">3.6.1.</span> <span class="nav-text">RDB(Redis DataBase)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">3.6.1.1.</span> <span class="nav-text">实现原理</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%A7%A6%E5%8F%91%E6%96%B9%E5%BC%8F"><span class="nav-number">3.6.1.2.</span> <span class="nav-text">触发方式</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#save%E5%91%BD%E4%BB%A4"><span class="nav-number">3.6.1.2.1.</span> <span class="nav-text">save命令</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#bgsave%E5%91%BD%E4%BB%A4"><span class="nav-number">3.6.1.2.2.</span> <span class="nav-text">bgsave命令</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E8%A7%A6%E5%8F%91"><span class="nav-number">3.6.1.2.3.</span> <span class="nav-text">自动触发</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#RDB%E7%9A%84%E4%BC%98%E5%8A%BF%E5%92%8C%E5%8A%A3%E5%8A%BF"><span class="nav-number">3.6.1.2.4.</span> <span class="nav-text">RDB的优势和劣势</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#AOF-Append-Only-File"><span class="nav-number">3.6.2.</span> <span class="nav-text">AOF(Append Only File)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86-1"><span class="nav-number">3.6.2.1.</span> <span class="nav-text">实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E5%9B%BE"><span class="nav-number">3.6.2.1.1.</span> <span class="nav-text">实现原理图</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E9%87%8D%E5%86%99%E5%8E%9F%E7%90%86"><span class="nav-number">3.6.2.1.2.</span> <span class="nav-text">文件重写原理</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%A7%A6%E5%8F%91%E6%96%B9%E5%BC%8F-1"><span class="nav-number">3.6.2.2.</span> <span class="nav-text">触发方式</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#AOF%E4%B9%9F%E6%9C%89%E4%B8%89%E7%A7%8D%E8%A7%A6%E5%8F%91%E6%9C%BA%E5%88%B6"><span class="nav-number">3.6.2.2.1.</span> <span class="nav-text">AOF也有三种触发机制</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#AOF%E7%9A%84%E4%BC%98%E5%8A%BF%E5%92%8C%E5%8A%A3%E5%8A%BF"><span class="nav-number">3.6.2.2.2.</span> <span class="nav-text">AOF的优势和劣势</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RDB%E5%92%8CAOF%E8%AF%A5%E5%A6%82%E4%BD%95%E9%80%89%E6%8B%A9%EF%BC%9F"><span class="nav-number">3.6.3.</span> <span class="nav-text">RDB和AOF该如何选择？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RDB-AOF%E6%B7%B7%E5%90%88%E6%8C%81%E4%B9%85%E5%8C%96%EF%BC%88redis-4-0-%E6%8F%90%E4%BE%9B%EF%BC%89"><span class="nav-number">3.6.4.</span> <span class="nav-text">RDB-AOF混合持久化（redis 4.0+提供）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%9B%9E%E6%94%B6%E7%AD%96%E7%95%A5%E5%92%8CKey%E8%BF%87%E6%9C%9F%E7%AD%96%E7%95%A5"><span class="nav-number">3.7.</span> <span class="nav-text">内存回收策略和Key过期策略</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%99%90%E5%88%B6%E5%86%85%E5%AD%98%E4%BD%BF%E7%94%A8"><span class="nav-number">3.7.1.</span> <span class="nav-text">限制内存使用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E7%9A%84%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B"><span class="nav-number">3.7.2.</span> <span class="nav-text">策略的执行过程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#LRU%E7%BC%93%E5%AD%98"><span class="nav-number">3.7.2.1.</span> <span class="nav-text">LRU缓存</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%89%80%E6%9C%89%E7%AD%96%E7%95%A5"><span class="nav-number">3.7.2.2.</span> <span class="nav-text">所有策略</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%B8%85%E9%99%A4%E5%B8%A6%E6%9C%89%E8%BF%87%E6%9C%9F%E6%97%B6%E9%97%B4%E7%9A%84-key"><span class="nav-number">3.7.3.</span> <span class="nav-text">如何清除带有过期时间的 key</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E7%AD%96%E7%95%A5"><span class="nav-number">3.7.3.1.</span> <span class="nav-text">定时策略</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%83%B0%E6%80%A7%E7%AD%96%E7%95%A5"><span class="nav-number">3.7.3.2.</span> <span class="nav-text">惰性策略</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%8A%98%E4%B8%AD%E7%AD%96%E7%95%A5"><span class="nav-number">3.7.3.3.</span> <span class="nav-text">折中策略</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95"><span class="nav-number">3.8.</span> <span class="nav-text">性能测试</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E5%91%BD%E4%BB%A4%E3%80%81%E7%AE%A1%E9%81%93%E5%91%BD%E4%BB%A4%E3%80%81%E4%BA%8B%E5%8A%A1%E5%91%BD%E4%BB%A4%E5%8F%8ALua%E8%84%9A%E6%9C%AC%E5%91%BD%E4%BB%A4%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">4.</span> <span class="nav-text">普通命令、管道命令、事务命令及Lua脚本命令的区别</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E8%AF%B4%E6%98%8E"><span class="nav-number">4.1.</span> <span class="nav-text">命令说明</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E5%91%BD%E4%BB%A4"><span class="nav-number">4.1.1.</span> <span class="nav-text">普通命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AE%A1%E9%81%93%E5%91%BD%E4%BB%A4"><span class="nav-number">4.1.2.</span> <span class="nav-text">管道命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E5%91%BD%E4%BB%A4"><span class="nav-number">4.1.3.</span> <span class="nav-text">事务命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Lua%E8%84%9A%E6%9C%AC%E5%91%BD%E4%BB%A4"><span class="nav-number">4.1.4.</span> <span class="nav-text">Lua脚本命令</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="nav-number">4.2.</span> <span class="nav-text">执行流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%9C%E5%AF%B9%E6%AF%94"><span class="nav-number">4.3.</span> <span class="nav-text">结果对比</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E5%8A%BF"><span class="nav-number">4.3.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8A%A3%E5%8A%BF"><span class="nav-number">4.3.2.</span> <span class="nav-text">劣势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F"><span class="nav-number">4.3.3.</span> <span class="nav-text">注意</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zangh"
+      src="/images/my-avatar.jpg">
+  <p class="site-author-name" itemprop="name">zangh</p>
+  <div class="site-description" itemprop="description">不积跬步 无以至千里</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">57</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=1950343972&auto=1&height=66"></iframe>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ForeverZang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ForeverZang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/7619861326" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;7619861326" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://gitee.com/www.bau123.com" title="https:&#x2F;&#x2F;gitee.com&#x2F;www.bau123.com" rel="noopener" target="_blank">Gitee</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/u012285269" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;u012285269" rel="noopener" target="_blank">CSDN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mvnrepository.com/" title="https:&#x2F;&#x2F;mvnrepository.com" rel="noopener" target="_blank">Maven</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://tool.lu/c/other" title="https:&#x2F;&#x2F;tool.lu&#x2F;c&#x2F;other" rel="noopener" target="_blank">Tools</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://regexper.com/" title="https:&#x2F;&#x2F;regexper.com" rel="noopener" target="_blank">Regexper</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/ForeverZang/ForeverZang" title="https:&#x2F;&#x2F;github.com&#x2F;ForeverZang&#x2F;ForeverZang" rel="noopener" target="_blank">Images</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zangh</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">251k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">3:48</span>
+</div>
+
+        
+
+
+
+
+
+
+<script data-pjax>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"mduyVmAWkh7R2nK98LxGBuFp-gzGzoHsz","app_key":"oncH6LSVH5snGThBoRpokkWT","server_url":null,"security":false};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+    </div>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":140,"height":240},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

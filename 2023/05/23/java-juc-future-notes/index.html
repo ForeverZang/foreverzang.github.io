@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"foreverzang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="JUC包及Future介绍">
+<meta property="og:url" content="https://foreverzang.github.io/2023/05/23/java-juc-future-notes/index.html">
+<meta property="og:site_name" content="zangh&#39;s blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/7bcc461730cf4059ab8331745cdaf122.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/034d0f0f9e8349b98e28f339d2637e35.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/69b5d2ae54414baea9a3601aabcce665.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/c9adfdc1e7254eafa28fd6745d753bbe.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/2aa00eb459cf414fb72ab82cf50d83fa.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/83f9d01e51924fa889b66f51178f6706.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/e59920fc00f74a82833b93b05853c3a9.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/2d30116d3d404ca89a94112eb32c15f5.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/6772e71b86a64c22917941cb4c1ad262.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/66f034fbdeb64e858dc73ee01141a771.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/ea334e3285334782a83cc1391bd395b7.png">
+<meta property="article:published_time" content="2023-05-23T03:34:29.000Z">
+<meta property="article:modified_time" content="2023-08-25T03:19:19.847Z">
+<meta property="article:author" content="zangh">
+<meta property="article:tag" content="笔记">
+<meta property="article:tag" content="任务编排">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/7bcc461730cf4059ab8331745cdaf122.png">
+
+<link rel="canonical" href="https://foreverzang.github.io/2023/05/23/java-juc-future-notes/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JUC包及Future介绍 | zangh's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">zangh's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录 总结 备查</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://foreverzang.github.io/2023/05/23/java-juc-future-notes/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/my-avatar.jpg">
+      <meta itemprop="name" content="zangh">
+      <meta itemprop="description" content="不积跬步 无以至千里">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="zangh's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JUC包及Future介绍
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-05-23 11:34:29" itemprop="dateCreated datePublished" datetime="2023-05-23T11:34:29+08:00">2023-05-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-08-25 11:19:19" itemprop="dateModified" datetime="2023-08-25T11:19:19+08:00">2023-08-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/" itemprop="url" rel="index"><span itemprop="name">开发语言</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80/Java/JUC/" itemprop="url" rel="index"><span itemprop="name">JUC</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2023/05/23/java-juc-future-notes/" class="post-meta-item leancloud_visitors" data-flag-title="JUC包及Future介绍" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>17k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>15 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="JUC工具包介绍"><a href="#JUC工具包介绍" class="headerlink" title="JUC工具包介绍"></a>JUC工具包介绍</h3><h4 id="JUC是什么？"><a href="#JUC是什么？" class="headerlink" title="JUC是什么？"></a>JUC是什么？</h4><blockquote>
+<p>是并发变成工具包（java.util.concurrent）的英文缩写，JUC的变迁历史：</p>
+</blockquote>
+<ul>
+<li>从 JDK1.5 开始，Java 官⽅在 rt.jar 核⼼ jar 包⽂件中增加了 java.util.concurrent 并发包，由 Doug Lea ⼤⽜编写实现，并在后继的主要版本中不断对其增强、优化。</li>
+<li>在 JDK1.6 中，主要对基础数据结构类进⾏了并发特性增强。</li>
+<li>在 JDK1.7 中，主要对并发框架⼯具类进⾏了增强，新增了 ForkJoin 系列。</li>
+<li>在 JDK1.8 中，主要对原⼦操作⼯具类进⾏了增强，增加了适⽤于更多场景的⼯具类。</li>
+</ul>
+<h4 id="JUC包目录结构"><a href="#JUC包目录结构" class="headerlink" title="JUC包目录结构"></a>JUC包目录结构</h4><table>
+<thead>
+<tr>
+<th>包路径</th>
+<th>主要内容</th>
+<th>典型类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>java.util.concurrent</td>
+<td>提供很多种最基本的并发工具类，包含对各类数据结构的并发封装，并发框架主要接口</td>
+<td>CountDownLatch、CyclicBarrier、Semaphore、Exchanger、Phaser、BlockingQueue、ConcurrentHashMap、ThreadPoolExecutor、ForkJoinPool</td>
+</tr>
+<tr>
+<td>java.util.concurrent.atomic</td>
+<td>提供各类原子操作工具类</td>
+<td>AtomicInteger、DoubleAdder、LongAccumulator、AtomicReference</td>
+</tr>
+<tr>
+<td>java.util.concurrent.locks</td>
+<td>提供各类锁工具</td>
+<td>Lock、ReadWriteLock、ReentrantLock、ReentrantReadWriteLock、StampedLock</td>
+</tr>
+</tbody></table>
+<p><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/7bcc461730cf4059ab8331745cdaf122.png" alt="包目录结构截图"></p>
+<h4 id="JUC包内容分类"><a href="#JUC包内容分类" class="headerlink" title="JUC包内容分类"></a>JUC包内容分类</h4><p><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/034d0f0f9e8349b98e28f339d2637e35.png" alt="包内容分类截图"><br>主要包含以下5个方面：</p>
+<ul>
+<li><em>锁（locks）：</em> 提供适合各类场合的锁⼯具；</li>
+<li><em>原⼦变量（atomic）：</em> 原⼦变量类相关，是构建⾮阻塞算法的基础；</li>
+<li><em>并发框架（executor）：</em> 提供线程池相关类型；</li>
+<li><em>并发容器（collections）：</em> 提供⼀系列并发容器相关类型；</li>
+<li><em>同步⼯具（tools）：</em> 提供相对独⽴，且场景丰富的各类同步⼯具，如信号量（Semaphore）、闭锁（CountDownLatch）、栅栏（CyclicBarrier）等功能；</li>
+</ul>
+<h4 id="JUC解决的问题"><a href="#JUC解决的问题" class="headerlink" title="JUC解决的问题"></a>JUC解决的问题</h4><p>用于解决多线程同步问题，给Java开发者提供便利的函数功能、数据结构。</p>
+<h3 id="Future介绍"><a href="#Future介绍" class="headerlink" title="Future介绍"></a>Future介绍</h3><p>Future设计模式从本质上是用来解决的根本的问题在于可以让一个任务在异步执行，而任务执行完之后我们可以在未来的某一个时间点上去获取到这个任务执行的结果，不管这个任务是执行失败或成功。可以理解为对线程Fork&#x2F;Join的封装，使用变得更加简单便捷。</p>
+<h4 id="常用子类及核心方法"><a href="#常用子类及核心方法" class="headerlink" title="常用子类及核心方法"></a>常用子类及核心方法</h4><p>下图为本文主要介绍的2种Future子类<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/69b5d2ae54414baea9a3601aabcce665.png" alt="常用Future子类截图"></p>
+<p>Future接口的核心方法</p>
+<ol>
+<li>boolean cancel(boolean mayInterruptIfRunning)<br>尝试取消此任务</li>
+<li>boolean isCancelled()<br>如果此任务在正常完成之前被取消，则返回 true 。</li>
+<li>boolean isDone()<br>是否任务执行完了</li>
+<li>V get()<br>获取任务执行结果，如果任务没有完成，这个方法则会一直等待，没有超时机制</li>
+<li>V get(long timeout, TimeUnit unit)<br>获取任务执行结果，如果任务没有完成，这个方法则会一直等待，直到超过限定时间，超过限定时间则会抛出异常</li>
+</ol>
+<h4 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h4><p>两个任务没有必然的前后关系，如果在一个线程中串行执行，就有些浪费时间，不如让两个线程去并行执行这两个任务，执行完了到主线程去汇报就可以了。</p>
+<h4 id="常用的组合方式"><a href="#常用的组合方式" class="headerlink" title="常用的组合方式"></a>常用的组合方式</h4><h5 id="FutureTask"><a href="#FutureTask" class="headerlink" title="FutureTask"></a>FutureTask</h5><h6 id="类继承体系"><a href="#类继承体系" class="headerlink" title="类继承体系"></a>类继承体系</h6><ul>
+<li>具备了Future接口对任务状态判断、取消及结果获取的能力</li>
+<li>具备了Runnable接口处理业务的能力<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/c9adfdc1e7254eafa28fd6745d753bbe.png" alt="FutureTask类集成体系截图"></li>
+</ul>
+<h6 id="构造方法public-FutureTask-Callable-callable"><a href="#构造方法public-FutureTask-Callable-callable" class="headerlink" title="构造方法public FutureTask(Callable callable)"></a>构造方法public FutureTask(Callable<V> callable)</h6><p>结合Thread使用示例</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">FutureTaskTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        FutureTask&lt;String&gt; ft1 = <span class="keyword">new</span> <span class="title class_">FutureTask</span>&lt;&gt;(<span class="keyword">new</span> <span class="title class_">MyCallable</span>(<span class="string">&quot;任务1&quot;</span>, <span class="keyword">new</span> <span class="title class_">Random</span>().nextInt(<span class="number">10</span>)));</span><br><span class="line">        FutureTask&lt;String&gt; ft2 = <span class="keyword">new</span> <span class="title class_">FutureTask</span>&lt;&gt;(<span class="keyword">new</span> <span class="title class_">MyCallable</span>(<span class="string">&quot;任务2&quot;</span>, <span class="keyword">new</span> <span class="title class_">Random</span>().nextInt(<span class="number">10</span>)));</span><br><span class="line">        FutureTask&lt;String&gt; ft3 = <span class="keyword">new</span> <span class="title class_">FutureTask</span>&lt;&gt;(<span class="keyword">new</span> <span class="title class_">MyCallable</span>(<span class="string">&quot;任务3&quot;</span>, <span class="keyword">new</span> <span class="title class_">Random</span>().nextInt(<span class="number">10</span>)));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 启用子线程处理业务</span></span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">Thread</span>(ft1).start();</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">Thread</span>(ft2).start();</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">Thread</span>(ft3).start();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 主线程处理其它事情</span></span><br><span class="line">            <span class="type">int</span> <span class="variable">sec</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Random</span>().nextInt(<span class="number">10</span>);</span><br><span class="line">            System.out.println(<span class="string">&quot;main, running ...\n will cost about &quot;</span> + sec + <span class="string">&quot; s &quot;</span>);</span><br><span class="line">            TimeUnit.SECONDS.sleep(sec);</span><br><span class="line">            System.out.println(<span class="string">&quot;main, continue ...&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 查看子线程运行状态</span></span><br><span class="line">            System.out.println(<span class="string">&quot;main, ft1, isDone=&quot;</span> + ft1.isDone() + <span class="string">&quot;, isCancelled=&quot;</span> + ft1.isCancelled());</span><br><span class="line">            System.out.println(<span class="string">&quot;main, ft2, isDone=&quot;</span> + ft2.isDone() + <span class="string">&quot;, isCancelled=&quot;</span> + ft2.isCancelled());</span><br><span class="line">            System.out.println(<span class="string">&quot;main, ft3, isDone=&quot;</span> + ft3.isDone() + <span class="string">&quot;, isCancelled=&quot;</span> + ft3.isCancelled());</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 获取子线程返回结果</span></span><br><span class="line">            List&lt;String&gt; result = <span class="keyword">new</span> <span class="title class_">LinkedList</span>&lt;&gt;();</span><br><span class="line">            result.add(ft1.get());</span><br><span class="line">            result.add(ft2.get());</span><br><span class="line">            result.add(ft3.get());</span><br><span class="line">            System.out.println(<span class="string">&quot;main, finished !\n处理结果：&quot;</span> + result);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RequiredArgsConstructor</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">MyCallable</span> <span class="keyword">implements</span> <span class="title class_">Callable</span>&lt;String&gt; &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> String name;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> Integer sec;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> String <span class="title function_">call</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;job:&quot;</span> + name + <span class="string">&quot;, running ... will cost about &quot;</span> + sec + <span class="string">&quot; s &quot;</span>);</span><br><span class="line">            TimeUnit.SECONDS.sleep(sec);</span><br><span class="line">            System.out.println(<span class="string">&quot;job:&quot;</span> + name + <span class="string">&quot;, finished !&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> name + <span class="string">&quot;:success&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结合JUC并发框架Executor使用示例</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">FutureTaskTest2</span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 生产环境不建议使用Executors工具类产生的ExecutorService，存在一定的弊端（例如：无界队列会导致OOM问题）</span></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">static</span> <span class="type">ExecutorService</span> <span class="variable">executorService</span> <span class="operator">=</span> Executors.newCachedThreadPool();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        FutureTask&lt;String&gt; ft0 = <span class="keyword">new</span> <span class="title class_">FutureTask</span>&lt;&gt;(<span class="keyword">new</span> <span class="title class_">MyCallable</span>(<span class="string">&quot;任务0&quot;</span>, <span class="keyword">new</span> <span class="title class_">Random</span>().nextInt(<span class="number">10</span>)));</span><br><span class="line">        FutureTask&lt;String&gt; ft1 = <span class="keyword">new</span> <span class="title class_">FutureTask</span>&lt;&gt;(<span class="keyword">new</span> <span class="title class_">MyCallable</span>(<span class="string">&quot;任务1&quot;</span>, <span class="keyword">new</span> <span class="title class_">Random</span>().nextInt(<span class="number">10</span>)));</span><br><span class="line">        FutureTask&lt;String&gt; ft2 = <span class="keyword">new</span> <span class="title class_">FutureTask</span>&lt;&gt;(<span class="keyword">new</span> <span class="title class_">MyCallable</span>(<span class="string">&quot;任务2&quot;</span>, <span class="keyword">new</span> <span class="title class_">Random</span>().nextInt(<span class="number">10</span>)));</span><br><span class="line">        FutureTask&lt;String&gt; ft3 = <span class="keyword">new</span> <span class="title class_">FutureTask</span>&lt;&gt;(<span class="keyword">new</span> <span class="title class_">MyCallable</span>(<span class="string">&quot;任务3&quot;</span>, <span class="keyword">new</span> <span class="title class_">Random</span>().nextInt(<span class="number">10</span>)));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 启用子线程处理业务</span></span><br><span class="line">        executorService.submit(ft0);</span><br><span class="line">        executorService.submit(ft1);</span><br><span class="line">        executorService.submit(ft2);</span><br><span class="line">        executorService.submit(ft3);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 主线程处理其它事情</span></span><br><span class="line">            <span class="type">int</span> <span class="variable">sec</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Random</span>().nextInt(<span class="number">10</span>);</span><br><span class="line">            System.out.println(<span class="string">&quot;main, running ...\n will cost about &quot;</span> + sec + <span class="string">&quot; s &quot;</span>);</span><br><span class="line">            TimeUnit.SECONDS.sleep(sec);</span><br><span class="line">            System.out.println(<span class="string">&quot;main, continue ...&quot;</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 查看子线程运行状态</span></span><br><span class="line">            System.out.println(<span class="string">&quot;main, ft0, isDone=&quot;</span> + ft0.isDone() + <span class="string">&quot;, isCancelled=&quot;</span> + ft0.isCancelled());</span><br><span class="line">            System.out.println(<span class="string">&quot;main, ft1, isDone=&quot;</span> + ft1.isDone() + <span class="string">&quot;, isCancelled=&quot;</span> + ft1.isCancelled() + <span class="string">&quot;, cancel=&quot;</span> + ft1.cancel(<span class="literal">false</span>));</span><br><span class="line">            System.out.println(<span class="string">&quot;main, ft2, isDone=&quot;</span> + ft2.isDone() + <span class="string">&quot;, isCancelled=&quot;</span> + ft2.isCancelled() + <span class="string">&quot;, cancel=&quot;</span> + ft2.cancel(<span class="literal">true</span>));</span><br><span class="line">            System.out.println(<span class="string">&quot;main, ft3, isDone=&quot;</span> + ft3.isDone() + <span class="string">&quot;, isCancelled=&quot;</span> + ft3.isCancelled() + <span class="string">&quot;, cancel=&quot;</span> + ft3.cancel(<span class="literal">false</span>));</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 获取子线程返回结果</span></span><br><span class="line">            List&lt;String&gt; result = <span class="keyword">new</span> <span class="title class_">LinkedList</span>&lt;&gt;();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                result.add(ft0.get());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (CancellationException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft0, 被取消：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft0, 执行错误：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft0, 线程被中断：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                result.add(ft1.get());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (CancellationException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft1, 被取消：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft1, 执行错误：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft1, 线程被中断：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                result.add(ft2.get());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (CancellationException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft2, 被取消：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft2, 执行错误：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft2, 线程被中断：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                result.add(ft3.get(<span class="number">7</span>, TimeUnit.SECONDS));</span><br><span class="line">            &#125; <span class="keyword">catch</span> (CancellationException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft3, 被取消：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft3, 执行错误：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft3, 线程被中断：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125; <span class="keyword">catch</span> (TimeoutException e) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;main, ft3, 超时：&quot;</span> + e.getMessage());</span><br><span class="line">            &#125;</span><br><span class="line">            System.out.println(<span class="string">&quot;main, finished !\n处理结果：&quot;</span> + result);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            executorService.shutdown();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RequiredArgsConstructor</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">MyCallable</span> <span class="keyword">implements</span> <span class="title class_">Callable</span>&lt;String&gt; &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> String name;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> Integer sec;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> String <span class="title function_">call</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;job:&quot;</span> + name + <span class="string">&quot;, running ... will cost about &quot;</span> + sec + <span class="string">&quot; s &quot;</span>);</span><br><span class="line">            TimeUnit.SECONDS.sleep(sec);</span><br><span class="line">            System.out.println(<span class="string">&quot;job:&quot;</span> + name + <span class="string">&quot;, finished !&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> name + <span class="string">&quot;:success&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h6 id="另一个构造方法public-FutureTask-Runnable-runnable-V-result"><a href="#另一个构造方法public-FutureTask-Runnable-runnable-V-result" class="headerlink" title="另一个构造方法public FutureTask(Runnable runnable, V result)"></a>另一个构造方法public FutureTask(Runnable runnable, V result)</h6><p>与public FutureTask(Callable<V> callable)类似，内部通过RunnableAdapter<T>把Runnable接口适配为Callable<T>并把result参数作为结果返回。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 核心适配器类</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">RunnableAdapter</span>&lt;T&gt; <span class="keyword">implements</span> <span class="title class_">Callable</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">final</span> Runnable task;</span><br><span class="line">    <span class="keyword">final</span> T result;</span><br><span class="line">    </span><br><span class="line">    RunnableAdapter(Runnable task, T result) &#123;</span><br><span class="line">        <span class="built_in">this</span>.task = task;</span><br><span class="line">        <span class="built_in">this</span>.result = result;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> T <span class="title function_">call</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="comment">// 普通方式调用run方法，并未开启线程</span></span><br><span class="line">        task.run();</span><br><span class="line">        <span class="comment">// Runnable接口的run方法是没有返回值的】</span></span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="CompletableFuture"><a href="#CompletableFuture" class="headerlink" title="CompletableFuture"></a>CompletableFuture</h5><p>上一小节介绍常用类FutureTask，然而实际的业务场景可能更为复杂，例如以下几种：</p>
+<ol>
+<li>多个执行单元的串行请求<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/2aa00eb459cf414fb72ab82cf50d83fa.png" alt="串行阻塞截图01"></li>
+<li>多个执行单元的并行请求<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/83f9d01e51924fa889b66f51178f6706.png" alt="并行阻塞截图01"></li>
+<li>阻塞等待，串行的后面跟多个并行<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/e59920fc00f74a82833b93b05853c3a9.png" alt="阻塞等待截图011"></li>
+<li>阻塞等待，多个并行的执行完毕后才执行某个<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/2d30116d3d404ca89a94112eb32c15f5.png" alt="阻塞等待截图02"></li>
+<li>串并行相互依赖<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/6772e71b86a64c22917941cb4c1ad262.png" alt="串并依赖截图01"></li>
+<li>复杂场景<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/66f034fbdeb64e858dc73ee01141a771.png" alt="串并依赖截图02"></li>
+</ol>
+<p>面对以上几种场景，我们需要一种能够简化并发变成的“任务编排”工具</p>
+<ul>
+<li>这里推荐一个开源工具 <a target="_blank" rel="noopener" href="https://gitee.com/jd-platform-opensource/asyncTool">京东零售 &#x2F; asyncTool</a>，有兴趣的可以看下。</li>
+<li>CompletableFuture通过提供一系列方法使“任务编排”变的更加简单</li>
+</ul>
+<h6 id="类继承体系-1"><a href="#类继承体系-1" class="headerlink" title="类继承体系"></a>类继承体系</h6><ul>
+<li>CompletableFuture实现了CompletionStage接口和Future接口，前者是对后者的一个扩展，增加了异步回调、流式处理、多个Future组合处理的能力，使Java在处理多任务的协同工作时更加顺畅便利。</li>
+<li>同FutureTask相比，CompletableFuture最大的不同是支持流式（Stream）的计算处理，多个任务之间，可以前后相连，从而形成一个计算流。<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/juc/ea334e3285334782a83cc1391bd395b7.png" alt="在这里插入图片描述"></li>
+</ul>
+<h6 id="常用的方法"><a href="#常用的方法" class="headerlink" title="常用的方法"></a>常用的方法</h6><ul>
+<li>创建任务<ul>
+<li>.supplyAsync： 创建一个带返回值的任务</li>
+<li>.runAsync：创建一个不带返回值的任务</li>
+</ul>
+</li>
+<li>异步回调<ul>
+<li>.thenApply、.thenApplyAsync：带返回值的异步调用函数, 有入参, 有出参</li>
+<li>.thenAccept、.thenAcceptAsync：不带返回值的异步回调函数, 有入参</li>
+<li>.thenRun、.thenRunAsync：不带返回值的异步回调函数，无入参</li>
+<li>.thenCombine、.thenCombineAsync：一般，在连接任务之间互相不依赖的情况下，可以使用thenCombine来连接任务，从而提升任务之间的并发度。</li>
+<li>.thenCompose、.thenComposeAsync：与 .thenApply 类似</li>
+<li>.whenComplete：当主任务出现异常时, 会终止任务,get的时候会抛出主任务的异常, 入参值为null, 否则正常运行</li>
+<li>.handle、.handleAsync：与whenComplete的作用有些类似，但是handle接收的处理函数有返回值，而且返回值会影响最终获取的计算结果。</li>
+<li>.exceptionally：异步任务出现异常调用的回调方法</li>
+</ul>
+</li>
+<li>其中，带Async后缀的函数表示需要连接的后置任务会被单独提交到线程池中，从而相对前置任务来说是异步运行的。除此之外，两者没有其他区别。</li>
+</ul>
+<h4 id="具体场景示例"><a href="#具体场景示例" class="headerlink" title="具体场景示例"></a>具体场景示例</h4><h5 id="多个执行单元的串行请求"><a href="#多个执行单元的串行请求" class="headerlink" title="多个执行单元的串行请求"></a>多个执行单元的串行请求</h5><ul>
+<li>当通过thenApply &#x2F; thenAccept &#x2F; thenRun连接的任务，当且仅当前置任务计算完成时，才会开始后置任务的计算。因此，这组函数主要用于连接前后有依赖的任务链。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CompletableFutureTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">static</span> <span class="type">ExecutorService</span> <span class="variable">executorService</span> <span class="operator">=</span> Executors.newFixedThreadPool(<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future1 = CompletableFuture.supplyAsync(() -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 1&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">        &#125;, executorService);</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future2 = future1.thenApply((p) -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 2&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> p + <span class="number">10</span>;</span><br><span class="line">        &#125;);</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future3 = future2.thenApply((p) -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 3&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> p + <span class="number">2</span>;</span><br><span class="line">        &#125;);</span><br><span class="line">        System.out.println(<span class="string">&quot;result: &quot;</span> + future3.join());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="多个执行单元的并行请求"><a href="#多个执行单元的并行请求" class="headerlink" title="多个执行单元的并行请求"></a>多个执行单元的并行请求</h5><p>在连接任务之间互相不依赖的情况下，可以使用thenCombine来连接任务，从而提升任务之间的并发度。注意：thenAcceptBoth、thenAcceptBothAsync、runAfterBoth、runAfterBothAsync的作用与thenConbime类似，唯一不同的地方是任务类型不同，分别是BiConumser、Runnable。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CompletableFutureTest2</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">static</span> <span class="type">ExecutorService</span> <span class="variable">executorService</span> <span class="operator">=</span> Executors.newFixedThreadPool(<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future1 = CompletableFuture.supplyAsync(() -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 1&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">        &#125;, executorService);</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future2 = CompletableFuture.supplyAsync(() -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 2&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="number">10</span>;</span><br><span class="line">        &#125;, executorService);</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future3 = CompletableFuture.supplyAsync(() -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 3&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="number">10</span>;</span><br><span class="line">        &#125;, executorService);</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future = future1.thenCombine(future2.thenCombine(future3, (r2, r3) -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 2: r2=&quot;</span> + r2 + <span class="string">&quot;, r3=&quot;</span> + r3);</span><br><span class="line">            <span class="keyword">return</span> r2 + r3;</span><br><span class="line">        &#125;), (r1, r23) -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 2: r1=&quot;</span> + r1 + <span class="string">&quot;, r23=&quot;</span> + r23);</span><br><span class="line">            <span class="keyword">return</span> r1 + r23;</span><br><span class="line">        &#125;);</span><br><span class="line">        System.out.println(<span class="string">&quot;result: &quot;</span> + future.join());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="阻塞等待，串行的后面跟多个并行"><a href="#阻塞等待，串行的后面跟多个并行" class="headerlink" title="阻塞等待，串行的后面跟多个并行"></a>阻塞等待，串行的后面跟多个并行</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CompletableFutureTest3</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">static</span> <span class="type">ExecutorService</span> <span class="variable">executorService</span> <span class="operator">=</span> Executors.newFixedThreadPool(<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future1 = CompletableFuture.supplyAsync(() -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 1&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">        &#125;, executorService);</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future = future1.thenApply(r1 -&gt; &#123;</span><br><span class="line">            CompletableFuture&lt;Integer&gt; future2 = CompletableFuture.supplyAsync(() -&gt; &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;compute 2&quot;</span>);</span><br><span class="line">                <span class="keyword">return</span> <span class="number">10</span>;</span><br><span class="line">            &#125;, executorService);</span><br><span class="line">            CompletableFuture&lt;Integer&gt; future3 = CompletableFuture.supplyAsync(() -&gt; &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;compute 3&quot;</span>);</span><br><span class="line">                <span class="keyword">return</span> <span class="number">10</span>;</span><br><span class="line">            &#125;, executorService);</span><br><span class="line">            CompletableFuture&lt;Integer&gt; future23 = future2.thenCombine(future3, (r2, r3) -&gt; &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;compute 2: r2=&quot;</span> + r2 + <span class="string">&quot;, r3=&quot;</span> + r3);</span><br><span class="line">                <span class="keyword">return</span> r2 + r3;</span><br><span class="line">            &#125;);</span><br><span class="line">            <span class="keyword">return</span> r1 + future23.join();</span><br><span class="line">        &#125;);</span><br><span class="line">        System.out.println(<span class="string">&quot;result: &quot;</span> + future.join());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="阻塞等待，多个并行的执行完毕后才执行"><a href="#阻塞等待，多个并行的执行完毕后才执行" class="headerlink" title="阻塞等待，多个并行的执行完毕后才执行"></a>阻塞等待，多个并行的执行完毕后才执行</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CompletableFutureTest4</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">static</span> <span class="type">ExecutorService</span> <span class="variable">executorService</span> <span class="operator">=</span> Executors.newFixedThreadPool(<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future1 = CompletableFuture.supplyAsync(() -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 1&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="number">10</span>;</span><br><span class="line">        &#125;, executorService);</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future2 = CompletableFuture.supplyAsync(() -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 2&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="number">10</span>;</span><br><span class="line">        &#125;, executorService);</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future12 = future1.thenCombine(future2, (r1, r2) -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 12: r1=&quot;</span> + r1 + <span class="string">&quot;, r2=&quot;</span> + r2);</span><br><span class="line">            <span class="keyword">return</span> r1 + r2;</span><br><span class="line">        &#125;);</span><br><span class="line">        CompletableFuture&lt;Integer&gt; future = future12.thenCompose((r12) -&gt; CompletableFuture.supplyAsync(() -&gt; &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;compute 3&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> r12 + <span class="number">1</span>;</span><br><span class="line">        &#125;, executorService));</span><br><span class="line">        System.out.println(<span class="string">&quot;result: &quot;</span> + future.join());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="串并行相互依赖"><a href="#串并行相互依赖" class="headerlink" title="串并行相互依赖"></a>串并行相互依赖</h5><p>请自行尝试，略…</p>
+<h5 id="复杂场景"><a href="#复杂场景" class="headerlink" title="复杂场景"></a>复杂场景</h5><p>请自行尝试，略…</p>
+<h4 id="子线程异常处理"><a href="#子线程异常处理" class="headerlink" title="子线程异常处理"></a>子线程异常处理</h4><blockquote>
+<p>子线程中异常处理通常有以下3种处理方式：</p>
+</blockquote>
+<h5 id="子线程中使用try…catch…"><a href="#子线程中使用try…catch…" class="headerlink" title="子线程中使用try…catch…"></a>子线程中使用try…catch…</h5>  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyCallable</span> <span class="keyword">implements</span> <span class="title class_">Callable</span>&lt;Object&gt; &#123;</span><br><span class="line"></span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> Object <span class="title function_">call</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">          <span class="keyword">try</span> &#123;</span><br><span class="line">              <span class="comment">// 业务操作</span></span><br><span class="line">          &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">              System.out.println(<span class="string">&quot;错误：&quot;</span> + e.getMessage());</span><br><span class="line">              <span class="comment">// 弥补逻辑</span></span><br><span class="line">          &#125;</span><br><span class="line">          <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>或</p>
+   <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">  <span class="keyword">class</span> <span class="title class_">MyRunnable</span> <span class="keyword">implements</span> <span class="title class_">Runnable</span> &#123;</span><br><span class="line"></span><br><span class="line">     <span class="meta">@Override</span></span><br><span class="line">     <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">         <span class="keyword">try</span> &#123;</span><br><span class="line">             <span class="comment">// 业务操作</span></span><br><span class="line">         &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">             System.out.println(<span class="string">&quot;错误：&quot;</span> + e.getMessage());</span><br><span class="line">             <span class="comment">// 弥补逻辑</span></span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="为线程设置未捕获异常处理器UncaughtExceptionHandler"><a href="#为线程设置未捕获异常处理器UncaughtExceptionHandler" class="headerlink" title="为线程设置未捕获异常处理器UncaughtExceptionHandler"></a>为线程设置未捕获异常处理器UncaughtExceptionHandler</h5><blockquote>
+</blockquote>
+<p>如果当前线程有异常处理器（默认没有），则优先使用该UncaughtExceptionHandler类；否则如果当前线程所属的线程组有异常处理器，则使用线程组的UncaughtExceptionHandler；否则，使用全局默认的DefaultUncaughtExceptionHandler；如果都没有的话，子线程就会退出。</p>
+<blockquote>
+<p>为线程设置异常处理器，有以下2中方式：</p>
+<ol>
+<li>通过Thread.setUncaughtExceptionHandler设置当前线程的异常处理器；</li>
+<li>通过Thread.setDefaultUncaughtExceptionHandler设置整个程序默认的异常处理器</li>
+</ol>
+<p><strong>注意</strong>：子线程中发生了异常，如果没有任何类来接手处理的话，则直接退出，不会有任何的日志记录。所以，如果什么都不做的话，是会出现子线程任务没有执行陈宫，也没有任何日志提示的现象。</p>
+</blockquote>
+<p>为单个线程设置异常处理器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ThreadUncaughtExceptionTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="comment">// 设置全局默认异常处理器</span></span><br><span class="line">        Thread.setDefaultUncaughtExceptionHandler(<span class="keyword">new</span> <span class="title class_">ThreadUncaughtExceptionTest2</span>.ChildThreadExceptionHandler());</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 设置当前线程异常处理器</span></span><br><span class="line">        <span class="type">Thread</span> <span class="variable">thread</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(<span class="keyword">new</span> <span class="title class_">MyRunnable</span>(<span class="number">0</span>));</span><br><span class="line">        thread.setUncaughtExceptionHandler(<span class="keyword">new</span> <span class="title class_">ChildThreadExceptionHandler</span>());</span><br><span class="line">        thread.start();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">ChildThreadExceptionHandler</span> <span class="keyword">implements</span> <span class="title class_">Thread</span>.UncaughtExceptionHandler &#123;</span><br><span class="line">    </span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">uncaughtException</span><span class="params">(Thread t, Throwable e)</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;thread: &quot;</span> + t.getId() + <span class="string">&quot;, error: &quot;</span> + e.getMessage());</span><br><span class="line">        &#125;</span><br><span class="line">    </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@RequiredArgsConstructor</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">MyRunnable</span> <span class="keyword">implements</span> <span class="title class_">Runnable</span> &#123;</span><br><span class="line">    </span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> Integer a;</span><br><span class="line">    </span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="type">int</span> <span class="variable">b</span> <span class="operator">=</span> <span class="number">2</span>;</span><br><span class="line">            System.out.println(<span class="string">&quot;b=&quot;</span> + b + <span class="string">&quot;, b/a=&quot;</span> + b / a);</span><br><span class="line">        &#125;</span><br><span class="line">    </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为线程组设置异常处理器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ThreadGroupUncaughtExceptionTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="type">ThreadGroup</span> <span class="variable">tg</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MyThreadGroup</span>(<span class="string">&quot;TestThreadGroup&quot;</span>);</span><br><span class="line">        <span class="type">Thread</span> <span class="variable">thread</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(tg, <span class="keyword">new</span> <span class="title class_">MyRunnable</span>(<span class="number">0</span>));</span><br><span class="line">        thread.start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RequiredArgsConstructor</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">MyRunnable</span> <span class="keyword">implements</span> <span class="title class_">Runnable</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> Integer a;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="type">int</span> <span class="variable">b</span> <span class="operator">=</span> <span class="number">2</span>;</span><br><span class="line">            System.out.println(<span class="string">&quot;b=&quot;</span> + b + <span class="string">&quot;, b/a=&quot;</span> + b / a);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">MyThreadGroup</span> <span class="keyword">extends</span> <span class="title class_">ThreadGroup</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="title function_">MyThreadGroup</span><span class="params">(String name)</span> &#123;</span><br><span class="line">            <span class="built_in">super</span>(name);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">uncaughtException</span><span class="params">(Thread t, Throwable e)</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;group: &quot;</span> + getName() + <span class="string">&quot;, thread: &quot;</span> + t.getId() + <span class="string">&quot;, error: &quot;</span> + e.getMessage());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为线程池设置异常处理器：</p>
+<ul>
+<li>值得注意的是线程池的异常处理器，只有通过 execute 提交的任务，才能将它抛出的异常交给未捕获异常处理器，而通过 submit 提交的任务，无论是抛出的未检査异常还是已检査异常，都将被认为是任务返回状态的一部分。这也是为什么推荐通过捕获Future的get方法抛出异常类型的原因。</li>
+<li>关于Executor并发框架的使用，不是本文主要内容，有机会可以另起一篇再作介绍。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ExecutorUncaughtExceptionTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">static</span> <span class="type">ExecutorService</span> <span class="variable">executorService</span> <span class="operator">=</span> Executors.newFixedThreadPool(<span class="number">10</span>, r -&gt; &#123;</span><br><span class="line">        <span class="type">Thread</span> <span class="variable">thread</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(r);</span><br><span class="line">        thread.setUncaughtExceptionHandler(<span class="keyword">new</span> <span class="title class_">ChildThreadExceptionHandler</span>());</span><br><span class="line">        <span class="keyword">return</span> thread;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="comment">// 启用子线程处理业务</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            executorService.execute(<span class="keyword">new</span> <span class="title class_">MyRunnable</span>(<span class="number">0</span>));</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                TimeUnit.SECONDS.sleep(<span class="number">10</span>);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            executorService.shutdown();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">ChildThreadExceptionHandler</span> <span class="keyword">implements</span> <span class="title class_">Thread</span>.UncaughtExceptionHandler &#123;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">uncaughtException</span><span class="params">(Thread t, Throwable e)</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;thread: &quot;</span> + t.getId() + <span class="string">&quot;, error: &quot;</span> + e.getMessage());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RequiredArgsConstructor</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">MyRunnable</span> <span class="keyword">implements</span> <span class="title class_">Runnable</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> Integer a;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="type">int</span> <span class="variable">b</span> <span class="operator">=</span> <span class="number">2</span>;</span><br><span class="line">            System.out.println(<span class="string">&quot;b=&quot;</span> + b + <span class="string">&quot;, b/a=&quot;</span> + b / a);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="通过捕获Future的get方法抛出异常类型（推荐）"><a href="#通过捕获Future的get方法抛出异常类型（推荐）" class="headerlink" title="通过捕获Future的get方法抛出异常类型（推荐）"></a>通过捕获Future的get方法抛出异常类型（推荐）</h5><p>参考FutureTask示例代码</p>
+<h3 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h3><ol>
+<li><a target="_blank" rel="noopener" href="http://ifeve.com/doug-lea/">《并发编程网》</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_37854829/article/details/122656639">《JUC并发编程包Future模式详解》</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_44912855/article/details/119269417">《CompletableFuture的使用介绍, CompletableFuture与FutureTask的区别》</a></li>
+<li><a target="_blank" rel="noopener" href="https://gitee.com/jd-platform-opensource/asyncTool">《asyncTool并行框架》</a></li>
+<li><a target="_blank" rel="noopener" href="https://wenku.baidu.com/view/510442df0142a8956bec0975f46527d3240ca601.html">《Java子线程中的异常处理（通用）》</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/u013672585/article/details/110305705">《CompletableFuture 并行及串行》</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/tongtest/article/details/107549749">《CompletableFuture 详解》</a></li>
+</ol>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E7%AC%94%E8%AE%B0/" rel="tag"><i class="fa fa-tag"></i> 笔记</a>
+              <a href="/tags/%E4%BB%BB%E5%8A%A1%E7%BC%96%E6%8E%92/" rel="tag"><i class="fa fa-tag"></i> 任务编排</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/05/17/nexus3-docker/" rel="prev" title="安装Nexus3成品库（容器）">
+      <i class="fa fa-chevron-left"></i> 安装Nexus3成品库（容器）
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/05/25/harbor-docker/" rel="next" title="安装Harbor镜像仓库（容器）">
+      安装Harbor镜像仓库（容器） <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+  </div>
+  
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#JUC%E5%B7%A5%E5%85%B7%E5%8C%85%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">JUC工具包介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#JUC%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">1.1.</span> <span class="nav-text">JUC是什么？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#JUC%E5%8C%85%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-number">1.2.</span> <span class="nav-text">JUC包目录结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#JUC%E5%8C%85%E5%86%85%E5%AE%B9%E5%88%86%E7%B1%BB"><span class="nav-number">1.3.</span> <span class="nav-text">JUC包内容分类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#JUC%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">1.4.</span> <span class="nav-text">JUC解决的问题</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Future%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.</span> <span class="nav-text">Future介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E5%AD%90%E7%B1%BB%E5%8F%8A%E6%A0%B8%E5%BF%83%E6%96%B9%E6%B3%95"><span class="nav-number">2.1.</span> <span class="nav-text">常用子类及核心方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">2.2.</span> <span class="nav-text">应用场景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E7%9A%84%E7%BB%84%E5%90%88%E6%96%B9%E5%BC%8F"><span class="nav-number">2.3.</span> <span class="nav-text">常用的组合方式</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#FutureTask"><span class="nav-number">2.3.1.</span> <span class="nav-text">FutureTask</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%B1%BB%E7%BB%A7%E6%89%BF%E4%BD%93%E7%B3%BB"><span class="nav-number">2.3.1.1.</span> <span class="nav-text">类继承体系</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95public-FutureTask-Callable-callable"><span class="nav-number">2.3.1.2.</span> <span class="nav-text">构造方法public FutureTask(Callable callable)</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%8F%A6%E4%B8%80%E4%B8%AA%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95public-FutureTask-Runnable-runnable-V-result"><span class="nav-number">2.3.1.3.</span> <span class="nav-text">另一个构造方法public FutureTask(Runnable runnable, V result)</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#CompletableFuture"><span class="nav-number">2.3.2.</span> <span class="nav-text">CompletableFuture</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%B1%BB%E7%BB%A7%E6%89%BF%E4%BD%93%E7%B3%BB-1"><span class="nav-number">2.3.2.1.</span> <span class="nav-text">类继承体系</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E7%9A%84%E6%96%B9%E6%B3%95"><span class="nav-number">2.3.2.2.</span> <span class="nav-text">常用的方法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B7%E4%BD%93%E5%9C%BA%E6%99%AF%E7%A4%BA%E4%BE%8B"><span class="nav-number">2.4.</span> <span class="nav-text">具体场景示例</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A4%9A%E4%B8%AA%E6%89%A7%E8%A1%8C%E5%8D%95%E5%85%83%E7%9A%84%E4%B8%B2%E8%A1%8C%E8%AF%B7%E6%B1%82"><span class="nav-number">2.4.1.</span> <span class="nav-text">多个执行单元的串行请求</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A4%9A%E4%B8%AA%E6%89%A7%E8%A1%8C%E5%8D%95%E5%85%83%E7%9A%84%E5%B9%B6%E8%A1%8C%E8%AF%B7%E6%B1%82"><span class="nav-number">2.4.2.</span> <span class="nav-text">多个执行单元的并行请求</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%98%BB%E5%A1%9E%E7%AD%89%E5%BE%85%EF%BC%8C%E4%B8%B2%E8%A1%8C%E7%9A%84%E5%90%8E%E9%9D%A2%E8%B7%9F%E5%A4%9A%E4%B8%AA%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.4.3.</span> <span class="nav-text">阻塞等待，串行的后面跟多个并行</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%98%BB%E5%A1%9E%E7%AD%89%E5%BE%85%EF%BC%8C%E5%A4%9A%E4%B8%AA%E5%B9%B6%E8%A1%8C%E7%9A%84%E6%89%A7%E8%A1%8C%E5%AE%8C%E6%AF%95%E5%90%8E%E6%89%8D%E6%89%A7%E8%A1%8C"><span class="nav-number">2.4.4.</span> <span class="nav-text">阻塞等待，多个并行的执行完毕后才执行</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%B2%E5%B9%B6%E8%A1%8C%E7%9B%B8%E4%BA%92%E4%BE%9D%E8%B5%96"><span class="nav-number">2.4.5.</span> <span class="nav-text">串并行相互依赖</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A4%8D%E6%9D%82%E5%9C%BA%E6%99%AF"><span class="nav-number">2.4.6.</span> <span class="nav-text">复杂场景</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AD%90%E7%BA%BF%E7%A8%8B%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86"><span class="nav-number">2.5.</span> <span class="nav-text">子线程异常处理</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AD%90%E7%BA%BF%E7%A8%8B%E4%B8%AD%E4%BD%BF%E7%94%A8try%E2%80%A6catch%E2%80%A6"><span class="nav-number">2.5.1.</span> <span class="nav-text">子线程中使用try…catch…</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%BA%E7%BA%BF%E7%A8%8B%E8%AE%BE%E7%BD%AE%E6%9C%AA%E6%8D%95%E8%8E%B7%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E5%99%A8UncaughtExceptionHandler"><span class="nav-number">2.5.2.</span> <span class="nav-text">为线程设置未捕获异常处理器UncaughtExceptionHandler</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%80%9A%E8%BF%87%E6%8D%95%E8%8E%B7Future%E7%9A%84get%E6%96%B9%E6%B3%95%E6%8A%9B%E5%87%BA%E5%BC%82%E5%B8%B8%E7%B1%BB%E5%9E%8B%EF%BC%88%E6%8E%A8%E8%8D%90%EF%BC%89"><span class="nav-number">2.5.3.</span> <span class="nav-text">通过捕获Future的get方法抛出异常类型（推荐）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">3.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zangh"
+      src="/images/my-avatar.jpg">
+  <p class="site-author-name" itemprop="name">zangh</p>
+  <div class="site-description" itemprop="description">不积跬步 无以至千里</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">57</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=1950343972&auto=1&height=66"></iframe>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ForeverZang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ForeverZang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/7619861326" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;7619861326" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://gitee.com/www.bau123.com" title="https:&#x2F;&#x2F;gitee.com&#x2F;www.bau123.com" rel="noopener" target="_blank">Gitee</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/u012285269" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;u012285269" rel="noopener" target="_blank">CSDN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mvnrepository.com/" title="https:&#x2F;&#x2F;mvnrepository.com" rel="noopener" target="_blank">Maven</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://tool.lu/c/other" title="https:&#x2F;&#x2F;tool.lu&#x2F;c&#x2F;other" rel="noopener" target="_blank">Tools</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://regexper.com/" title="https:&#x2F;&#x2F;regexper.com" rel="noopener" target="_blank">Regexper</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/ForeverZang/ForeverZang" title="https:&#x2F;&#x2F;github.com&#x2F;ForeverZang&#x2F;ForeverZang" rel="noopener" target="_blank">Images</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zangh</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">251k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">3:48</span>
+</div>
+
+        
+
+
+
+
+
+
+<script data-pjax>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"mduyVmAWkh7R2nK98LxGBuFp-gzGzoHsz","app_key":"oncH6LSVH5snGThBoRpokkWT","server_url":null,"security":false};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+    </div>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":140,"height":240},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

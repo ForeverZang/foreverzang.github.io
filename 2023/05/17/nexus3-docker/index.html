@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"foreverzang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="打开链接：http:&#x2F;&#x2F;{server}:{ip}&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安装Nexus3成品库（容器）">
+<meta property="og:url" content="https://foreverzang.github.io/2023/05/17/nexus3-docker/index.html">
+<meta property="og:site_name" content="zangh&#39;s blog">
+<meta property="og:description" content="打开链接：http:&#x2F;&#x2F;{server}:{ip}&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/5ef337f774fa48fdb71c61a2ddcd93a6.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/74f4c44224964c6ea30c7914e7025ef3.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/41c44f134a6d4ab49527a6196029eaaa.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/e387e4f607f540f490bd7353669d443f.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/eb3571a9d67348a4992f7fb80e86e177.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/382a1592aed54f908800513e7f390053.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/43be83b0c6704ae08b8da526938c1f93.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/3a1eb68801c84774a3c77c8c5434f247.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/909e2884ece44f6580daadd1fc02b08d.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/52005769cfc74763a0a707ed3b3fb076.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/41dd8206a94c4e63908e3b68282836c0.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/ca8662ef26734d3e95b3d0815a9c7b65.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/fb02861cf4f3429bb9f5dc7a1edce221.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/88c62606edf040609bf4c013a1d33362.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/9bbaa43b03cf465da792c513d27a96a2.png">
+<meta property="article:published_time" content="2023-05-17T08:16:21.000Z">
+<meta property="article:modified_time" content="2023-08-25T03:19:19.849Z">
+<meta property="article:author" content="zangh">
+<meta property="article:tag" content="容器">
+<meta property="article:tag" content="Nexus3">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/5ef337f774fa48fdb71c61a2ddcd93a6.png">
+
+<link rel="canonical" href="https://foreverzang.github.io/2023/05/17/nexus3-docker/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>安装Nexus3成品库（容器） | zangh's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">zangh's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录 总结 备查</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://foreverzang.github.io/2023/05/17/nexus3-docker/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/my-avatar.jpg">
+      <meta itemprop="name" content="zangh">
+      <meta itemprop="description" content="不积跬步 无以至千里">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="zangh's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          安装Nexus3成品库（容器）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-05-17 16:16:21" itemprop="dateCreated datePublished" datetime="2023-05-17T16:16:21+08:00">2023-05-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-08-25 11:19:19" itemprop="dateModified" datetime="2023-08-25T11:19:19+08:00">2023-08-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CI-CD/" itemprop="url" rel="index"><span itemprop="name">CI/CD</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CI-CD/%E4%BB%93%E5%BA%93/" itemprop="url" rel="index"><span itemprop="name">仓库</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CI-CD/%E4%BB%93%E5%BA%93/Nexus3/" itemprop="url" rel="index"><span itemprop="name">Nexus3</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2023/05/17/nexus3-docker/" class="post-meta-item leancloud_visitors" data-flag-title="安装Nexus3成品库（容器）" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前置条件"><a href="#前置条件" class="headerlink" title="前置条件"></a>前置条件</h1><blockquote>
+<p>docker安装：<a target="_blank" rel="noopener" href="https://blog.csdn.net/u012285269/article/details/124479943">安装【Docker in CentOS7.x】</a></p>
+</blockquote>
+<ul>
+<li>推荐配置4c4g+</li>
+</ul>
+<h1 id="服务安装"><a href="#服务安装" class="headerlink" title="服务安装"></a>服务安装</h1><h2 id="镜像地址"><a href="#镜像地址" class="headerlink" title="镜像地址"></a>镜像地址</h2><blockquote>
+<p>dockerhub地址：<a target="_blank" rel="noopener" href="https://hub.docker.com/r/sonatype/nexus3">sonatype&#x2F;nexus3</a> &gt; <a target="_blank" rel="noopener" href="https://hub.docker.com/r/sonatype/nexus3/tags?page=1&name=3.42.0">3.42.0</a></p>
+</blockquote>
+<h2 id="安装服务"><a href="#安装服务" class="headerlink" title="安装服务"></a>安装服务</h2><h3 id="软件目录"><a href="#软件目录" class="headerlink" title="软件目录"></a>软件目录</h3><p>新建目录：nexus为软件主目录，data为数据目录</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@nexus03 <span class="built_in">local</span>]<span class="comment"># mkdir -p nexus/data</span></span><br></pre></td></tr></table></figure>
+
+<p>目录权限：修改为200</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@nexus03 <span class="built_in">local</span>]<span class="comment"># chown -R 200 nexus</span></span><br><span class="line">[root@nexus03 <span class="built_in">local</span>]<span class="comment"># ll | grep nexus</span></span><br><span class="line">drwxr-xr-x. 3  200 root 18 Nov  2 01:47 nexus</span><br></pre></td></tr></table></figure>
+
+<h3 id="服务脚本"><a href="#服务脚本" class="headerlink" title="服务脚本"></a>服务脚本</h3><p>restart.sh</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">name=nexus</span><br><span class="line">cId=$(docker ps -a | grep <span class="string">&quot;<span class="variable">$name</span>&quot;</span> | awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span>)</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;<span class="variable">$name</span> container id : <span class="variable">$cId</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ -z <span class="string">&quot;<span class="variable">$cId</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">     docker run --name <span class="variable">$name</span> \</span><br><span class="line">     -p 8081:8081 \</span><br><span class="line">     --restart=always \</span><br><span class="line">     -v /usr/local/nexus/data:/nexus-data \</span><br><span class="line">     -v /etc/localtime:/etc/localtime:ro \</span><br><span class="line">     -d sonatype/nexus3:3.42.0</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">     sId=$(docker ps | grep <span class="string">&quot;<span class="variable">$name</span>&quot;</span> | awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span>)</span><br><span class="line">     <span class="keyword">if</span> [ -n <span class="string">&quot;<span class="variable">$sId</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">         docker stop <span class="variable">$sId</span></span><br><span class="line">     <span class="keyword">fi</span></span><br><span class="line">     docker start <span class="variable">$cId</span>     </span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+
+<p>cleanup.sh</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">name=nexus</span><br><span class="line">cId=$(docker ps | grep <span class="variable">$name</span> | awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span>)</span><br><span class="line"><span class="keyword">if</span> [ -n <span class="string">&quot;<span class="variable">$cId</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">   <span class="built_in">echo</span> <span class="string">&quot;stop <span class="variable">$name</span> id:<span class="variable">$cId</span> ...&quot;</span></span><br><span class="line">   docker stop <span class="variable">$cId</span></span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line">sId=$(docker ps -a | grep <span class="variable">$name</span> | awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span>)</span><br><span class="line"><span class="keyword">if</span> [ -n <span class="string">&quot;<span class="variable">$sId</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">   <span class="built_in">echo</span> <span class="string">&quot;remove <span class="variable">$name</span> id:<span class="variable">$sId</span> !&quot;</span></span><br><span class="line">   docker <span class="built_in">rm</span> <span class="variable">$sId</span></span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="开启端口"><a href="#开启端口" class="headerlink" title="开启端口"></a>开启端口</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@nexus03 <span class="built_in">local</span>]<span class="comment"># firewall-cmd --zone=public --add-port=8081/tcp --permanent</span></span><br><span class="line">[root@nexus03 <span class="built_in">local</span>]<span class="comment"># firewall-cmd --reload</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="启动服务"><a href="#启动服务" class="headerlink" title="启动服务"></a>启动服务</h2><h3 id="启动命令"><a href="#启动命令" class="headerlink" title="启动命令"></a>启动命令</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@nexus03 <span class="built_in">local</span>]<span class="comment"># cd nexus &amp;&amp; sh restart.sh</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="查看效果"><a href="#查看效果" class="headerlink" title="查看效果"></a>查看效果</h3><p>打开浏览器地址栏：<a target="_blank" rel="noopener" href="http://172.16.5.102:8081/%EF%BC%88%E6%AD%A4%E4%B8%BA%E6%9C%AA%E7%99%BB%E5%BD%95%E7%8A%B6%E6%80%81%EF%BC%89">http://172.16.5.102:8081/（此为未登录状态）</a><br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/5ef337f774fa48fdb71c61a2ddcd93a6.png" alt="在这里插入图片描述"></p>
+<p>登录账号（从3.17版本开始默认密码不再是admin123，密码是随机生成。首次登录页面会显示admin用户的密码在&#x2F;nexus-data&#x2F;admin.password，因为我们在创建容器时做了目录映射，所以进入宿主机查看密码；管理员账号仍为 <em>admin</em>）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@nexus03 nexus]<span class="comment"># cat data/admin.password </span></span><br><span class="line">9e940511-2dd4-46cc-b272-7233c69fb60b</span><br></pre></td></tr></table></figure>
+
+<p>输入上述密码后，如有需要重置密码为 <em>123456</em><br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/74f4c44224964c6ea30c7914e7025ef3.png" alt="在这里插入图片描述"></p>
+<p>此处选择可以在无需认证的情况下使用仓库服务（不包含管理功能）<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/41c44f134a6d4ab49527a6196029eaaa.png" alt="在这里插入图片描述"></p>
+<h2 id="创建仓库"><a href="#创建仓库" class="headerlink" title="创建仓库"></a>创建仓库</h2><h3 id="创建Blob-Stores仓库"><a href="#创建Blob-Stores仓库" class="headerlink" title="创建Blob Stores仓库"></a>创建Blob Stores仓库</h3><p>存储库列表及存储库的说明<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/e387e4f607f540f490bd7353669d443f.png" alt="在这里插入图片描述"></p>
+<p>创建新的存储库mytest<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/eb3571a9d67348a4992f7fb80e86e177.png" alt="在这里插入图片描述"></p>
+<ul>
+<li>Type：Type的select选项框中有”File”和”S3”两个选项，这里选File就行。”S3”是亚马逊S3云存储，一般用不到</li>
+<li>Name：自定义</li>
+<li>Enable Soft Quota：限制目录的大小，如果要限制的话，就勾选上，并填上限制的条件和限制的值就OK了。</li>
+<li>Path：在填入Name之后，path会自动生成</li>
+</ul>
+<p>新建存储库完成<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/382a1592aed54f908800513e7f390053.png" alt="在这里插入图片描述"></p>
+<h3 id="添加新的仓库"><a href="#添加新的仓库" class="headerlink" title="添加新的仓库"></a>添加新的仓库</h3><h4 id="创建仓库-1"><a href="#创建仓库-1" class="headerlink" title="创建仓库"></a>创建仓库</h4><p>工具栏配置按钮 &#x3D;&gt; Repository &#x3D;&gt; Repositories &#x3D;&gt; Create repository<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/43be83b0c6704ae08b8da526938c1f93.png" alt="在这里插入图片描述"></p>
+<p>选择format为maven2的仓库模板（proxy为代理仓；hosted为本地私仓；group为组合仓）<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/3a1eb68801c84774a3c77c8c5434f247.png" alt="在这里插入图片描述"></p>
+<h4 id="创建release发布库"><a href="#创建release发布库" class="headerlink" title="创建release发布库"></a>创建release发布库</h4><p>选择maven2（hosted）类型仓库模板进行创建<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/909e2884ece44f6580daadd1fc02b08d.png" alt="在这里插入图片描述"></p>
+<ul>
+<li>Name：仓库名称</li>
+<li>Online：勾选，可以设置这个仓库是在线还是离线。</li>
+<li>Mavne 2<ul>
+<li>Version Policy：版本策略，有三个选项<ul>
+<li>Release：正式版本（选择）</li>
+<li>Snapshot：快照版本</li>
+<li>Mixed：混合模式</li>
+</ul>
+</li>
+<li>Layout Policy：布局策略<ul>
+<li>Strict：严格（选择默认）</li>
+<li>Permissive：宽松</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Storage：存储库（用于存储数据，例如：*.pom、*.jar、etc.）<ul>
+<li>Blob store：选择此仓库使用的Blob存储，这里选择之前创建的 lk-maven。</li>
+<li>Strict Content Type Validation：验证上传内容格式，这里不勾选。</li>
+</ul>
+</li>
+<li>Hosted：<ul>
+<li>Deployment Policy：部署策略，有三个选项：</li>
+<li>Allow Redeploy：允许重新部署</li>
+<li>Disable Redeploy：禁止重新部署（选择默认）</li>
+<li>Read-Only：只读</li>
+</ul>
+</li>
+</ul>
+<h4 id="创建snapshot快照库"><a href="#创建snapshot快照库" class="headerlink" title="创建snapshot快照库"></a>创建snapshot快照库</h4><p>选择maven2（hosted）类型仓库模板进行创建<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/52005769cfc74763a0a707ed3b3fb076.png" alt="在这里插入图片描述"></p>
+<ul>
+<li>Name：test-snapshots</li>
+<li>Mavne 2<ul>
+<li>Version Policy：版本策略，有三个选项<ul>
+<li>Release：正式版本</li>
+<li>Snapshot：快照版本（选择）</li>
+<li>Mixed：混合模式</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="创建proxy类型代理仓库"><a href="#创建proxy类型代理仓库" class="headerlink" title="创建proxy类型代理仓库"></a>创建proxy类型代理仓库</h4><p>选择maven2（proxy）类型仓库模板进行创建<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/41dd8206a94c4e63908e3b68282836c0.png" alt="在这里插入图片描述"><br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/ca8662ef26734d3e95b3d0815a9c7b65.png" alt="在这里插入图片描述"></p>
+<ul>
+<li>Name：个人要代理阿里云的maven，自定义”test-proxy”</li>
+<li>Online：勾选，设置成在线</li>
+<li>Proxy：<ul>
+<li>Remote storage：设置远程中央仓库的地址，这里设置成阿里云的maven仓库地址—<a target="_blank" rel="noopener" href="http://maven.aliyun.com/nexus/content/groups/public%EF%BC%8C%E5%85%B6%E4%BB%96%E7%9A%84%E7%94%A8%E9%BB%98%E8%AE%A4%E5%80%BC%E5%8D%B3%E5%8F%AF%E3%80%82">http://maven.aliyun.com/nexus/content/groups/public，其他的用默认值即可。</a></li>
+</ul>
+</li>
+<li>Storage：<ul>
+<li>Blob store：选择 mytest</li>
+<li>Strict Content Type Validation：不勾选</li>
+</ul>
+</li>
+</ul>
+<h4 id="创建group类型聚合仓库"><a href="#创建group类型聚合仓库" class="headerlink" title="创建group类型聚合仓库"></a>创建group类型聚合仓库</h4><p>选择maven2（gruop）类型仓库模板进行创建<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/fb02861cf4f3429bb9f5dc7a1edce221.png" alt="在这里插入图片描述"></p>
+<ul>
+<li>Group：将左侧的Available中的仓库列表添加到右侧的Members中，顺序建议阿里云的代理仓库放第一，因为maven代理仓库下载顺序是从上往下的，建议将速度快的仓库放在最前面。</li>
+</ul>
+<h2 id="使用仓库"><a href="#使用仓库" class="headerlink" title="使用仓库"></a>使用仓库</h2><h3 id="基本配置"><a href="#基本配置" class="headerlink" title="基本配置"></a>基本配置</h3><ul>
+<li>Maven的settings.xml配置（本地仓库地址；账号密码；镜像仓库地址）<figure class="highlight r"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">&lt;</span><span class="operator">!</span><span class="operator">-</span><span class="operator">-</span> 自定义仓库路径 <span class="operator">-</span><span class="operator">-&gt;</span></span><br><span class="line"><span class="operator">&lt;</span>localRepository<span class="operator">&gt;</span>D<span class="operator">:</span><span class="operator">/</span>repos<span class="operator">/</span>.m2<span class="operator">/</span>repository<span class="operator">&lt;</span><span class="operator">/</span>localRepository<span class="operator">&gt;</span></span><br><span class="line"><span class="operator">&lt;</span><span class="operator">!</span><span class="operator">-</span><span class="operator">-</span> 私仓的登录凭证 <span class="operator">-</span><span class="operator">-&gt;</span></span><br><span class="line"><span class="operator">&lt;</span>server<span class="operator">&gt;</span></span><br><span class="line">      <span class="operator">&lt;</span>id<span class="operator">&gt;</span>zangh<span class="operator">&lt;</span><span class="operator">/</span>id<span class="operator">&gt;</span></span><br><span class="line">      <span class="operator">&lt;</span>username<span class="operator">&gt;</span>admin<span class="operator">&lt;</span><span class="operator">/</span>username<span class="operator">&gt;</span></span><br><span class="line">      <span class="operator">&lt;</span>password<span class="operator">&gt;</span><span class="number">123456</span><span class="operator">&lt;</span><span class="operator">/</span>password<span class="operator">&gt;</span></span><br><span class="line"><span class="operator">&lt;</span><span class="operator">/</span>server<span class="operator">&gt;</span></span><br><span class="line"><span class="operator">&lt;</span><span class="operator">!</span><span class="operator">-</span><span class="operator">-</span> Mirrors镜像地址<span class="punctuation">(</span>也可在项目的pom.xml中单独指定<span class="punctuation">)</span> <span class="operator">-</span><span class="operator">-&gt;</span></span><br><span class="line"><span class="operator">&lt;</span>mirror<span class="operator">&gt;</span></span><br><span class="line">      <span class="operator">&lt;</span>id<span class="operator">&gt;</span>zangh<span class="operator">&lt;</span><span class="operator">/</span>id<span class="operator">&gt;</span></span><br><span class="line">      <span class="operator">&lt;</span>mirrorOf<span class="operator">&gt;</span><span class="operator">*</span><span class="operator">&lt;</span><span class="operator">/</span>mirrorOf<span class="operator">&gt;</span></span><br><span class="line">      <span class="operator">&lt;</span>url<span class="operator">&gt;</span>http<span class="operator">:</span><span class="operator">/</span><span class="operator">/</span><span class="number">172.16</span>.5.102<span class="operator">:</span><span class="number">8081</span><span class="operator">/</span>repository<span class="operator">/</span>maven<span class="operator">-</span>public<span class="operator">/</span><span class="operator">&lt;</span><span class="operator">/</span>url<span class="operator">&gt;</span></span><br><span class="line"><span class="operator">&lt;</span><span class="operator">/</span>mirror<span class="operator">&gt;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="上传jar包"><a href="#上传jar包" class="headerlink" title="上传jar包"></a>上传jar包</h3><h4 id="脚本上传"><a href="#脚本上传" class="headerlink" title="脚本上传"></a>脚本上传</h4><p>通过修改脚本中变量实现在Unix-Like系统中上传jar包（内部通过api方式）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"> </span><br><span class="line">jarFile=<span class="string">&quot;test.jar&quot;</span></span><br><span class="line">groupId=<span class="string">&quot;com.wywtime&quot;</span></span><br><span class="line">artifactId=<span class="string">&quot;test&quot;</span></span><br><span class="line">version=<span class="string">&quot;1.0.0&quot;</span></span><br><span class="line"><span class="comment"># 私有仓库地址</span></span><br><span class="line">mvn_repository=<span class="string">&quot;http://localhost:12345/repository/lib&quot;</span></span><br><span class="line"> </span><br><span class="line"><span class="comment"># 将点转化为斜杠</span></span><br><span class="line">path=`<span class="built_in">echo</span> <span class="variable">$&#123;groupId&#125;</span> | sed  <span class="string">&quot;s/\./\//g&quot;</span>`</span><br><span class="line"> </span><br><span class="line"><span class="comment"># 动态生成pom文件</span></span><br><span class="line"><span class="built_in">cat</span> &gt; <span class="variable">$&#123;artifactId&#125;</span>-<span class="variable">$&#123;version&#125;</span>.pom &lt;&lt;<span class="string">EOF</span></span><br><span class="line"><span class="string">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="string">&lt;project xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&quot; xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;</span></span><br><span class="line"><span class="string">    xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;</span></span><br><span class="line"><span class="string">  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;</span></span><br><span class="line"><span class="string">  &lt;groupId&gt;$&#123;groupId&#125;&lt;/groupId&gt;</span></span><br><span class="line"><span class="string">  &lt;artifactId&gt;$&#123;artifactId&#125;&lt;/artifactId&gt;</span></span><br><span class="line"><span class="string">  &lt;version&gt;$&#123;version&#125;&lt;/version&gt;</span></span><br><span class="line"><span class="string">&lt;/project&gt;</span></span><br><span class="line"><span class="string">EOF</span></span><br><span class="line"> </span><br><span class="line"><span class="comment"># 上传jar文件</span></span><br><span class="line">curl -u <span class="string">&quot;admin:admin&quot;</span> -X PUT -v -T <span class="variable">$&#123;jarFile&#125;</span> <span class="variable">$&#123;mvn_repository&#125;</span>/<span class="variable">$&#123;path&#125;</span>/<span class="variable">$&#123;artifactId&#125;</span>/<span class="variable">$&#123;version&#125;</span>/<span class="variable">$&#123;artifactId&#125;</span>-<span class="variable">$&#123;version&#125;</span>.jar</span><br><span class="line"> </span><br><span class="line"><span class="comment"># 上传pom文件</span></span><br><span class="line">curl -u <span class="string">&quot;admin:admin&quot;</span> -X PUT -v -T <span class="variable">$&#123;artifactId&#125;</span>-<span class="variable">$&#123;version&#125;</span>.pom <span class="variable">$&#123;mvn_repository&#125;</span>/<span class="variable">$&#123;path&#125;</span>/<span class="variable">$&#123;artifactId&#125;</span>/<span class="variable">$&#123;version&#125;</span>/<span class="variable">$&#123;artifactId&#125;</span>-<span class="variable">$&#123;version&#125;</span>.pom</span><br><span class="line"> </span><br><span class="line"><span class="comment"># 删除动态生成的pom</span></span><br><span class="line"><span class="built_in">rm</span> -rf <span class="variable">$&#123;artifactId&#125;</span>-<span class="variable">$&#123;version&#125;</span>.pom</span><br></pre></td></tr></table></figure>
+
+<h4 id="命令上传"><a href="#命令上传" class="headerlink" title="命令上传"></a>命令上传</h4><p>nexus控制台上传jar包<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/88c62606edf040609bf4c013a1d33362.png" alt="在这里插入图片描述"></p>
+<p><strong>发布到本地仓库</strong>：deploy:deploy-file上传打包好的jar包或第三方jar包</p>
+<figure class="highlight r"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">@</span>TITLE 上传第三方JAR包 by zangh</span><br><span class="line"></span><br><span class="line"><span class="built_in">call</span> mvn <span class="operator">-</span>s D<span class="operator">:</span><span class="punctuation">\</span>apache<span class="operator">-</span>maven<span class="operator">-</span><span class="number">3.8</span>.3<span class="punctuation">\</span>conf<span class="punctuation">\</span>settings.xml install<span class="operator">:</span>install<span class="operator">-</span>file<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>DmavenTestSkip<span class="operator">=</span>true<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>DgroupId<span class="operator">=</span>spire.doc.free<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>DartifactId<span class="operator">=</span>e<span class="operator">-</span>iceblue<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>Dversion<span class="operator">=</span><span class="number">5.2</span>.1<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>Dpackaging<span class="operator">=</span>jar<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>DgeneratePom<span class="operator">=</span>true<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>DrepositoryId<span class="operator">=</span>zangh<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>Dfile<span class="operator">=</span>D<span class="operator">:</span><span class="punctuation">\</span>repos<span class="punctuation">\</span>.m2<span class="punctuation">\</span>repository<span class="punctuation">\</span>e<span class="operator">-</span>iceblue<span class="punctuation">\</span>spire.doc.free<span class="punctuation">\</span><span class="number">5.2</span>.0<span class="punctuation">\</span>spire.doc.free<span class="operator">-</span><span class="number">5.2</span>.0.jar<span class="operator">^</span></span><br><span class="line"></span><br><span class="line"><span class="operator">@</span>pause</span><br></pre></td></tr></table></figure>
+
+<p><strong>发布到私服仓库</strong>：deploy:deploy-file上传打包好的jar包或第三方jar包</p>
+<ul>
+<li>install:install-file &#x3D;&#x3D;&gt; 只会打包上传到本地仓库，不会上传到私仓</li>
+<li>在wins中变量后面的字符串如有特殊字符，需用双引号括起来</li>
+<li>-DrepositoryId 对应到 settings.xml 中的 server 标签的账号密码 id</li>
+<li>-Durl 指定发布到正式&#x2F;快照私仓（快照 -Dversion 需以-SNAPSHOT结尾）</li>
+<li>-DmavenTestSkip&#x3D;true 不执行测试用例，也不编译测试用例类</li>
+<li>-DskipTests，不执行测试用例，但编译测试用例类生成相应的class文件至target&#x2F;test-classes下<figure class="highlight r"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="operator">@</span>TITLE 上传第三方JAR包 by zangh</span><br><span class="line"></span><br><span class="line"><span class="built_in">call</span> mvn <span class="operator">-</span>s D<span class="operator">:</span><span class="punctuation">\</span>apache<span class="operator">-</span>maven<span class="operator">-</span><span class="number">3.8</span>.3<span class="punctuation">\</span>conf<span class="punctuation">\</span>settings.xml deploy<span class="operator">:</span>deploy<span class="operator">-</span>file<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>DmavenTestSkip<span class="operator">=</span>true<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>DgroupId<span class="operator">=</span>spire.doc.free<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>DartifactId<span class="operator">=</span>e<span class="operator">-</span>iceblue<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>Dversion<span class="operator">=</span><span class="number">5.2</span>.1<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>Dpackaging<span class="operator">=</span>jar<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>DgeneratePom<span class="operator">=</span>true<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>DrepositoryId<span class="operator">=</span>zangh<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>Dfile<span class="operator">=</span>D<span class="operator">:</span><span class="punctuation">\</span>repos<span class="punctuation">\</span>.m2<span class="punctuation">\</span>repository<span class="punctuation">\</span>e<span class="operator">-</span>iceblue<span class="punctuation">\</span>spire.doc.free<span class="punctuation">\</span><span class="number">5.2</span>.0<span class="punctuation">\</span>spire.doc.free<span class="operator">-</span><span class="number">5.2</span>.0.jar<span class="operator">^</span></span><br><span class="line"> <span class="operator">-</span>Durl<span class="operator">=</span>http<span class="operator">:</span><span class="operator">/</span><span class="operator">/</span><span class="number">172.16</span>.5.102<span class="operator">:</span><span class="number">8081</span><span class="operator">/</span>repository<span class="operator">/</span>test<span class="operator">-</span>releases</span><br><span class="line"></span><br><span class="line"><span class="operator">@</span>pause</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>上传后的结果（releases相同版本jar不能重复上传，snapshots可以重复上传）<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nexus3/9bbaa43b03cf465da792c513d27a96a2.png" alt="在这里插入图片描述"></p>
+<p>项目的pom.xml中添加依赖</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">repositories</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">repository</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">id</span>&gt;</span>zangh<span class="tag">&lt;/<span class="name">id</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">name</span>&gt;</span>zangh&#x27;s primary repos<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">url</span>&gt;</span>https://repo.e-iceblue.cn/repository/test-public/<span class="tag">&lt;/<span class="name">url</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">repository</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">repositories</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- nexus私仓：http://172.16.5.102:8081/repository/test-public/ --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>spire.doc.free<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>e-iceblue<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>5.2.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h1 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h1><p><a target="_blank" rel="noopener" href="http://t.zoukankan.com/hanby-p-14150348.html">Centos7下Nexus3的安装和配置</a><br><a target="_blank" rel="noopener" href="http://www.manongjc.com/detail/51-zxbtpqwrrczwqjj.html">本地私服仓库nexus3.3.1使用手册</a><br><a target="_blank" rel="noopener" href="http://t.zoukankan.com/geass-jango-p-11881902.html">MVN package、install、deploy区别</a><br><a target="_blank" rel="noopener" href="https://www.codenong.com/cs109460658/">Maven私仓 — Nexus搭建与使用</a></p>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E5%AE%B9%E5%99%A8/" rel="tag"><i class="fa fa-tag"></i> 容器</a>
+              <a href="/tags/Nexus3/" rel="tag"><i class="fa fa-tag"></i> Nexus3</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/05/17/blog-setup/" rel="prev" title="博客搭建">
+      <i class="fa fa-chevron-left"></i> 博客搭建
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/05/23/java-juc-future-notes/" rel="next" title="JUC包及Future介绍">
+      JUC包及Future介绍 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+  </div>
+  
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E7%BD%AE%E6%9D%A1%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">前置条件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%AE%89%E8%A3%85"><span class="nav-number">2.</span> <span class="nav-text">服务安装</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%95%9C%E5%83%8F%E5%9C%B0%E5%9D%80"><span class="nav-number">2.1.</span> <span class="nav-text">镜像地址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E6%9C%8D%E5%8A%A1"><span class="nav-number">2.2.</span> <span class="nav-text">安装服务</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E7%9B%AE%E5%BD%95"><span class="nav-number">2.2.1.</span> <span class="nav-text">软件目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E8%84%9A%E6%9C%AC"><span class="nav-number">2.2.2.</span> <span class="nav-text">服务脚本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%80%E5%90%AF%E7%AB%AF%E5%8F%A3"><span class="nav-number">2.2.3.</span> <span class="nav-text">开启端口</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E6%9C%8D%E5%8A%A1"><span class="nav-number">2.3.</span> <span class="nav-text">启动服务</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">2.3.1.</span> <span class="nav-text">启动命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E6%95%88%E6%9E%9C"><span class="nav-number">2.3.2.</span> <span class="nav-text">查看效果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E4%BB%93%E5%BA%93"><span class="nav-number">2.4.</span> <span class="nav-text">创建仓库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BABlob-Stores%E4%BB%93%E5%BA%93"><span class="nav-number">2.4.1.</span> <span class="nav-text">创建Blob Stores仓库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E6%96%B0%E7%9A%84%E4%BB%93%E5%BA%93"><span class="nav-number">2.4.2.</span> <span class="nav-text">添加新的仓库</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E4%BB%93%E5%BA%93-1"><span class="nav-number">2.4.2.1.</span> <span class="nav-text">创建仓库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BArelease%E5%8F%91%E5%B8%83%E5%BA%93"><span class="nav-number">2.4.2.2.</span> <span class="nav-text">创建release发布库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAsnapshot%E5%BF%AB%E7%85%A7%E5%BA%93"><span class="nav-number">2.4.2.3.</span> <span class="nav-text">创建snapshot快照库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAproxy%E7%B1%BB%E5%9E%8B%E4%BB%A3%E7%90%86%E4%BB%93%E5%BA%93"><span class="nav-number">2.4.2.4.</span> <span class="nav-text">创建proxy类型代理仓库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAgroup%E7%B1%BB%E5%9E%8B%E8%81%9A%E5%90%88%E4%BB%93%E5%BA%93"><span class="nav-number">2.4.2.5.</span> <span class="nav-text">创建group类型聚合仓库</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E4%BB%93%E5%BA%93"><span class="nav-number">2.5.</span> <span class="nav-text">使用仓库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E9%85%8D%E7%BD%AE"><span class="nav-number">2.5.1.</span> <span class="nav-text">基本配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8A%E4%BC%A0jar%E5%8C%85"><span class="nav-number">2.5.2.</span> <span class="nav-text">上传jar包</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%84%9A%E6%9C%AC%E4%B8%8A%E4%BC%A0"><span class="nav-number">2.5.2.1.</span> <span class="nav-text">脚本上传</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E4%B8%8A%E4%BC%A0"><span class="nav-number">2.5.2.2.</span> <span class="nav-text">命令上传</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">3.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zangh"
+      src="/images/my-avatar.jpg">
+  <p class="site-author-name" itemprop="name">zangh</p>
+  <div class="site-description" itemprop="description">不积跬步 无以至千里</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">57</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=1950343972&auto=1&height=66"></iframe>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ForeverZang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ForeverZang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/7619861326" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;7619861326" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://gitee.com/www.bau123.com" title="https:&#x2F;&#x2F;gitee.com&#x2F;www.bau123.com" rel="noopener" target="_blank">Gitee</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/u012285269" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;u012285269" rel="noopener" target="_blank">CSDN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mvnrepository.com/" title="https:&#x2F;&#x2F;mvnrepository.com" rel="noopener" target="_blank">Maven</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://tool.lu/c/other" title="https:&#x2F;&#x2F;tool.lu&#x2F;c&#x2F;other" rel="noopener" target="_blank">Tools</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://regexper.com/" title="https:&#x2F;&#x2F;regexper.com" rel="noopener" target="_blank">Regexper</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/ForeverZang/ForeverZang" title="https:&#x2F;&#x2F;github.com&#x2F;ForeverZang&#x2F;ForeverZang" rel="noopener" target="_blank">Images</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zangh</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">251k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">3:48</span>
+</div>
+
+        
+
+
+
+
+
+
+<script data-pjax>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"mduyVmAWkh7R2nK98LxGBuFp-gzGzoHsz","app_key":"oncH6LSVH5snGThBoRpokkWT","server_url":null,"security":false};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+    </div>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":140,"height":240},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

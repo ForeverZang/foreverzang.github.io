@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"foreverzang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="mysql常用命令、跨库事务等记录">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mysql原理介绍、备忘录等">
+<meta property="og:url" content="https://foreverzang.github.io/2023/05/28/mysql-notes/index.html">
+<meta property="og:site_name" content="zangh&#39;s blog">
+<meta property="og:description" content="mysql常用命令、跨库事务等记录">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/mysql/1566dae82f734cb78975210193c8c1f5.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16">
+<meta property="article:published_time" content="2023-05-28T02:33:55.000Z">
+<meta property="article:modified_time" content="2023-08-25T03:19:19.849Z">
+<meta property="article:author" content="zangh">
+<meta property="article:tag" content="笔记">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/mysql/1566dae82f734cb78975210193c8c1f5.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16">
+
+<link rel="canonical" href="https://foreverzang.github.io/2023/05/28/mysql-notes/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Mysql原理介绍、备忘录等 | zangh's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">zangh's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录 总结 备查</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://foreverzang.github.io/2023/05/28/mysql-notes/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/my-avatar.jpg">
+      <meta itemprop="name" content="zangh">
+      <meta itemprop="description" content="不积跬步 无以至千里">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="zangh's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Mysql原理介绍、备忘录等
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-05-28 10:33:55" itemprop="dateCreated datePublished" datetime="2023-05-28T10:33:55+08:00">2023-05-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-08-25 11:19:19" itemprop="dateModified" datetime="2023-08-25T11:19:19+08:00">2023-08-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/" itemprop="url" rel="index"><span itemprop="name">中间件</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E5%AD%98%E5%82%A8/" itemprop="url" rel="index"><span itemprop="name">存储</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E5%AD%98%E5%82%A8/Mysql/" itemprop="url" rel="index"><span itemprop="name">Mysql</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2023/05/28/mysql-notes/" class="post-meta-item leancloud_visitors" data-flag-title="Mysql原理介绍、备忘录等" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+            <div class="post-description">mysql常用命令、跨库事务等记录</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h3><h4 id="账号密码登录"><a href="#账号密码登录" class="headerlink" title="账号密码登录"></a>账号密码登录</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">msyql -u root(账号) -p <span class="built_in">test</span>(数据库名)</span><br><span class="line"><span class="comment"># Enter password: 输入密码</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="通过sql导入数据"><a href="#通过sql导入数据" class="headerlink" title="通过sql导入数据"></a>通过sql导入数据</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 登录账号后</span></span><br><span class="line">mysql&gt; show databases;</span><br><span class="line">+--------------------+</span><br><span class="line">| Database           |</span><br><span class="line">+--------------------+</span><br><span class="line">| information_schema |</span><br><span class="line">| mysql              |</span><br><span class="line">| performance_schema |</span><br><span class="line">| sys                |</span><br><span class="line">| <span class="built_in">test</span>               |</span><br><span class="line">+--------------------+</span><br><span class="line"><span class="comment"># 切换到指定的数据库，例：test库</span></span><br><span class="line">mysql&gt; use <span class="built_in">test</span>;</span><br><span class="line">Database changed</span><br><span class="line"><span class="comment"># 然后使用source命令，后面参数为脚本文件(如这里用到的.sql)，注：不需要分号</span></span><br><span class="line">mysql&gt; <span class="built_in">source</span> /opt/sql/gx_statics.sql</span><br></pre></td></tr></table></figure>
+
+<h4 id="导入数据库"><a href="#导入数据库" class="headerlink" title="导入数据库"></a>导入数据库</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 登录账号后</span></span><br><span class="line">mysql&gt; show databases;</span><br><span class="line">+--------------------+</span><br><span class="line">| Database           |</span><br><span class="line">+--------------------+</span><br><span class="line">| information_schema |</span><br><span class="line">| mysql              |</span><br><span class="line">| performance_schema |</span><br><span class="line">| sys                |</span><br><span class="line">+--------------------+</span><br><span class="line">mysql&gt; create database <span class="built_in">test</span>;</span><br><span class="line">Query OK, 1 row affected (0.00 sec)</span><br><span class="line">mysql&gt; show databases;</span><br><span class="line">+--------------------+</span><br><span class="line">| Database           |</span><br><span class="line">+--------------------+</span><br><span class="line">| information_schema |</span><br><span class="line">| mysql              |</span><br><span class="line">| performance_schema |</span><br><span class="line">| sys                |</span><br><span class="line">| <span class="built_in">test</span>               |</span><br><span class="line">+--------------------+</span><br><span class="line">5 rows <span class="keyword">in</span> <span class="built_in">set</span> (0.00 sec)</span><br><span class="line"><span class="comment"># 切换到指定的数据库</span></span><br><span class="line">mysql&gt; use <span class="built_in">test</span>;</span><br><span class="line">Database changed</span><br><span class="line"><span class="comment"># 查看当前所在数据库</span></span><br><span class="line">mysql&gt; select database();</span><br><span class="line">+------------+</span><br><span class="line">| database() |</span><br><span class="line">+------------+</span><br><span class="line">| <span class="built_in">test</span>       |</span><br><span class="line">+------------+</span><br><span class="line">1 row <span class="keyword">in</span> <span class="built_in">set</span> (0.00 sec)</span><br><span class="line"><span class="comment"># 导入预先整理好的sql（例：/opt/gxsz_tables.sql）</span></span><br><span class="line">mysql&gt; <span class="built_in">source</span> /opt/gxsz_tables.sql</span><br></pre></td></tr></table></figure>
+
+<h4 id="导出数据库"><a href="#导出数据库" class="headerlink" title="导出数据库"></a>导出数据库</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># mysqldump与mysql同级的命令，需要退出mysql命令行后执行</span></span><br><span class="line"><span class="comment"># mysqldump -u 用户名 -p [--databases] 数据库名 &gt; 导出的文件名</span></span><br><span class="line">mysqldump -u root -p <span class="built_in">test</span> &gt; test.sql</span><br><span class="line"><span class="comment"># Enter password: 输入密码</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># mysqldump -u 用户名 -p [--databases] 数据库名 表名&gt; 导出的文件名</span></span><br><span class="line">mysqldump -u root -p <span class="built_in">test</span> sz_city &gt; sz_city.sql</span><br><span class="line"><span class="comment"># Enter password: 输入密码</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="创建用户并授权"><a href="#创建用户并授权" class="headerlink" title="创建用户并授权"></a>创建用户并授权</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建用户</span></span><br><span class="line">mysql&gt; create user <span class="string">&#x27;&#123;username&#125;&#x27;</span>@<span class="string">&#x27;&#123;host&#125;&#x27;</span> identified by <span class="string">&#x27;&#123;password&#125;&#x27;</span>;</span><br><span class="line">Query OK, 0 rows affected (0.05 sec)</span><br><span class="line"><span class="comment">## 参数</span></span><br><span class="line">username：你将创建的用户名</span><br><span class="line">host：    指定该用户在哪个主机上可以登陆，如果是本地用户可用localhost，如果想让该用户可以从任意远程主机登陆，可以使用通配符%</span><br><span class="line">password：该用户的登陆密码，密码可以为空，如果为空则该用户可以不需要密码登陆服务器</span><br><span class="line"><span class="comment"># create user &#x27;dog&#x27;@&#x27;localhost&#x27; identified by  &#x27;123456&#x27;;</span></span><br><span class="line"><span class="comment"># create user &#x27;pig&#x27;@&#x27;192.168.1.101_&#x27; identified by  &#x27;123456&#x27;;</span></span><br><span class="line"><span class="comment"># create user &#x27;pig&#x27;@&#x27;%&#x27; identified by  &#x27;123456&#x27;;</span></span><br><span class="line"><span class="comment"># create user &#x27;pig&#x27;@&#x27;%&#x27; identified by  &#x27;&#x27;;</span></span><br><span class="line"><span class="comment"># create user &#x27;pig&#x27;@&#x27;%&#x27;;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 用户授权</span></span><br><span class="line">mysql&gt; grant &#123;privileges&#125; on &#123;databasename&#125;.&#123;tablename&#125; to <span class="string">&#x27;&#123;username&#125;&#x27;</span>@<span class="string">&#x27;&#123;host&#125;&#x27;</span>;</span><br><span class="line">Query OK, 0 rows affected (0.01 sec)</span><br><span class="line"><span class="comment">## 参数</span></span><br><span class="line">privileges：  用户的操作权限，如SELECT，INSERT，UPDATE等，如果要授予所的权限则使用ALL</span><br><span class="line">databasename：数据库名</span><br><span class="line">tablename：   表名，如果要授予该用户对所有数据库和表的相应操作权限则可用*表示，如*.*</span><br><span class="line"><span class="comment"># grant select,insert on test.sz_log to &#x27;test&#x27;@&#x27;%&#x27;;</span></span><br><span class="line"><span class="comment"># grant all on *.* to &#x27;test&#x27;@&#x27;%&#x27;;</span></span><br><span class="line"><span class="comment"># grant all on test.* to &#x27;test&#x27;@&#x27;%&#x27;;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 刷新权限</span></span><br><span class="line">mysql&gt; flush privileges;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置与更改用户密码</span></span><br><span class="line">mysql&gt; <span class="built_in">set</span> password <span class="keyword">for</span> <span class="string">&#x27;test&#x27;</span>@<span class="string">&#x27;%&#x27;</span> = <span class="string">&#x27;123456&#x27;</span>;</span><br><span class="line">Query OK, 0 rows affected (0.01 sec)</span><br></pre></td></tr></table></figure>
+
+<h4 id="查看用户及权限"><a href="#查看用户及权限" class="headerlink" title="查看用户及权限"></a>查看用户及权限</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># \g 相当于’;’</span></span><br><span class="line"><span class="comment"># \G使每个字段打印到单独的行，也有’;&#x27;的作用</span></span><br><span class="line">mysql&gt; SELECT user,host FROM mysql.user;</span><br><span class="line">+---------------+-----------+</span><br><span class="line">| user          | host      |</span><br><span class="line">+---------------+-----------+</span><br><span class="line">| gxejy         | %         |</span><br><span class="line">| mysql.session | localhost |</span><br><span class="line">| mysql.sys     | localhost |</span><br><span class="line">| root          | localhost |</span><br><span class="line">+---------------+-----------+</span><br><span class="line"><span class="comment"># 查看单个用户</span></span><br><span class="line">mysql&gt; SELECT user,host FROM mysql.user <span class="built_in">where</span> user = <span class="string">&#x27;gxejy&#x27;</span>;</span><br><span class="line">+-------+------+</span><br><span class="line">| user  | host |</span><br><span class="line">+-------+------+</span><br><span class="line">| gxejy | %    |</span><br><span class="line">+-------+------+</span><br><span class="line">mysql&gt; select * from mysql.user <span class="built_in">where</span> user = <span class="string">&#x27;root&#x27;</span>\G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">                    Host: %</span><br><span class="line">                    User: root</span><br><span class="line">             Select_priv: Y</span><br><span class="line">             Insert_priv: Y</span><br><span class="line">             Update_priv: Y</span><br><span class="line">             Delete_priv: Y</span><br><span class="line">             Create_priv: Y</span><br><span class="line">               Drop_priv: Y</span><br><span class="line">             Reload_priv: Y</span><br><span class="line">           Shutdown_priv: Y</span><br><span class="line">            Process_priv: Y</span><br><span class="line">               File_priv: Y</span><br><span class="line">              Grant_priv: Y</span><br><span class="line">         References_priv: Y</span><br><span class="line">              Index_priv: Y</span><br><span class="line">              Alter_priv: Y</span><br><span class="line">            Show_db_priv: Y</span><br><span class="line">              Super_priv: Y</span><br><span class="line">   Create_tmp_table_priv: Y</span><br><span class="line">        Lock_tables_priv: Y</span><br><span class="line">            Execute_priv: Y</span><br><span class="line">         Repl_slave_priv: Y</span><br><span class="line">        Repl_client_priv: Y</span><br><span class="line">        Create_view_priv: Y</span><br><span class="line">          Show_view_priv: Y</span><br><span class="line">     Create_routine_priv: Y</span><br><span class="line">      Alter_routine_priv: Y</span><br><span class="line">        Create_user_priv: Y</span><br><span class="line">              Event_priv: Y</span><br><span class="line">            Trigger_priv: Y</span><br><span class="line">  Create_tablespace_priv: Y</span><br><span class="line">                ssl_type: </span><br><span class="line">              ssl_cipher: 0x</span><br><span class="line">             x509_issuer: 0x</span><br><span class="line">            x509_subject: 0x</span><br><span class="line">           max_questions: 0</span><br><span class="line">             max_updates: 0</span><br><span class="line">         max_connections: 0</span><br><span class="line">    max_user_connections: 0</span><br><span class="line">                  plugin: caching_sha2_password</span><br><span class="line">   authentication_string: $A$005<span class="variable">$6ga</span>&#123;OR	mup26 </span><br><span class="line">                                             EKeIYo7Rf3zPsGxrJbUYd2RlK4T9xxidYA1P2civHVp7A</span><br><span class="line">        password_expired: N</span><br><span class="line">   password_last_changed: 2021-12-02 03:16:38</span><br><span class="line">       password_lifetime: NULL</span><br><span class="line">          account_locked: N</span><br><span class="line">        Create_role_priv: Y</span><br><span class="line">          Drop_role_priv: Y</span><br><span class="line">  Password_reuse_history: NULL</span><br><span class="line">     Password_reuse_time: NULL</span><br><span class="line">Password_require_current: NULL</span><br><span class="line">         User_attributes: NULL</span><br></pre></td></tr></table></figure>
+
+<h3 id="跨库事务"><a href="#跨库事务" class="headerlink" title="跨库事务"></a>跨库事务</h3><h4 id="同一个mysql实例，A库和B库在同一个事务中"><a href="#同一个mysql实例，A库和B库在同一个事务中" class="headerlink" title="同一个mysql实例，A库和B库在同一个事务中"></a>同一个mysql实例，A库和B库在同一个事务中</h4><ol>
+<li><p>首先要确保mysql开启XA事务支持</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SHOW VARIABLES LIKE ‘%XA%’;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如果innodb_support_xa的值是ON就说明mysql已经开启对XA事务的支持了，<br>如果不是就执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET innodb_support_xa = ON;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>XA（在shardingjdbc叫柔性事务）的性能很低。一个数据库的事务和多个数据库间的XA事务性能对比可发现，性能差10倍左右。</p>
+</li>
+<li><p>分布式事务原理：分段式提交<br>分布式事务通常采用2PC协议，全称Two Phase Commitment Protocol。该协议主要为了解决在分布式数据库场景下，所有节点间数据一致性的问题。</p>
+</li>
+</ol>
+<p>分布式事务通过2PC协议将提交分成两个阶段：<br>prepare；commit&#x2F;rollback<br>阶段一为准备（prepare）阶段。即所有的参与者准备执行事务并锁住需要的资源。参与者ready时，向transaction manager报告已准备就绪。</p>
+<p>阶段二为提交阶段（commit）。当transaction manager确认所有参与者都ready后，向所有参与者发送commit命令。<br>如下图所示：<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/mysql/1566dae82f734cb78975210193c8c1f5.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA6Ien6aaG6ZW_,size_20,color_FFFFFF,t_70,g_se,x_16" alt="2pc原理图"></p>
+<h3 id="性能优化"><a href="#性能优化" class="headerlink" title="性能优化"></a>性能优化</h3><h4 id="Explain执行计划分析器"><a href="#Explain执行计划分析器" class="headerlink" title="Explain执行计划分析器"></a>Explain执行计划分析器</h4><h5 id="Explain语法"><a href="#Explain语法" class="headerlink" title="Explain语法"></a>Explain语法</h5><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EXPLAIN <span class="keyword">sql</span> statement;</span><br></pre></td></tr></table></figure>
+
+<h5 id="Explain解释"><a href="#Explain解释" class="headerlink" title="Explain解释"></a>Explain解释</h5><ul>
+<li><p>id：优化器选定的执行计划中查询的序列号。</p>
+</li>
+<li><p>select_type：所用的查询类型，主要由以下这集中查询类型。</p>
+<ul>
+<li>DEPENDENT UNION：子查询中的UNION，且为UNION中从第二个SELECT开始的后面所有SELECT，同样依赖于外部查询的结果集。</li>
+<li>SIMPLE：除子查询或UNION之外的其他查询。<blockquote>
+<p>EXPLAIN<br>SELECT * FROM admin_user WHERE user_id &#x3D; 1\G;</p>
+</blockquote>
+</li>
+<li>PRIMARY：子查询中最外层查询，注意并不是主键查询。</li>
+<li>SUBQUERY：子查询内层查询的第一个SELECT，结果不依赖与外部查询结果集。<blockquote>
+<p>EXPLAIN<br>SELECT * FROM role WHERE id &#x3D; (SELECT role_id FROM admin_user WHERE user_id &#x3D; 1)\G;</p>
+</blockquote>
+</li>
+<li>UNCACHEABLE SUBQUERY：结果集无法缓存的子查询</li>
+<li>UNION：UNION 语句中第二个SELECT开始后面的所有SELECT,第一个SELECT为PRIMARY。</li>
+<li>UNION RESULT：UNION 中的合并结果。</li>
+</ul>
+</li>
+<li><p>table：显示这一步所访问的数据库中的表的名称。</p>
+</li>
+<li><p>type：告诉我们对标使用的访问方式，主要包含如下几种类型。</p>
+<ul>
+<li>all：全表扫描。</li>
+<li>const: 读常量，最多只会有一条记录匹配，由于是常量，实际上只需要读一次。</li>
+<li>eq_ref：最多只会有一条匹配结果，一般是通过主键或唯一键索引来访问</li>
+<li>fulltext：进行全文索引检索</li>
+<li>index：全索引扫描</li>
+<li>index_merge：查询中同时使用两个（或更多）索引，然后对索引结果进行和并，在读取表数据。</li>
+<li>index_subquery：子查询中的返回结果字段组合是一个索引（或索引组合），但不是一个主键或唯一索引。</li>
+<li>rang：索引范围扫描。</li>
+<li>ref：join语句中被驱动表索引引用的查询。</li>
+<li>ref_or_null：与ref的唯一区别就是使用索引引用的查询之外再增加一个空值的查询。</li>
+<li>system：系统表，表中只有一行数据：</li>
+<li>unique_subquery：子查询中的返回结果字段组合式主键或唯一约束。</li>
+</ul>
+</li>
+<li><p>possible_keys：该查询可以利用的索引。如果没有任何索引可以使用，就会显示程null，这项内容对优化索引时的调整非常重要。</p>
+</li>
+<li><p>key：优化器从possible_keys中选择使用的索引。</p>
+</li>
+<li><p>key_len：被选中使用索引的索引建长度。</p>
+</li>
+<li><p>ref：列出是通过常量，还是某个字段的某个字段来过滤的</p>
+</li>
+<li><p>rows：优化其通过系统手机的统计信息估算出来的结果集记录条数</p>
+</li>
+<li><p>extra：查询中每一步实现的额外细节信息。</p>
+<ul>
+<li>using index: 出现这个说明mysql使用了覆盖索引，避免访问了表的数据行，效率不错。</li>
+<li>using where：这说明服务器在存储引擎收到行后讲进行过滤。</li>
+<li>using temporary：这意味着mysql对查询结果进行排序的时候使用了一张临时表</li>
+<li>using filesort：这个说明mysql会对数据使用一个外部的索引排序<blockquote>
+<p>注意当出现using temporary 和 using filesort时候说明需要优化操作</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="Explain指标"><a href="#Explain指标" class="headerlink" title="Explain指标"></a>Explain指标</h5><p>优化优先级顺序：从左到右</p>
+<ul>
+<li>system &gt; const &gt; eq_ref &gt; ref &gt; fulltext &gt; ref_or_null &gt; index_merge &gt; unique_subquery &gt; index_subquery &gt; range &gt; index &gt; all</li>
+</ul>
+<h3 id="定时备份"><a href="#定时备份" class="headerlink" title="定时备份"></a>定时备份</h3><p>作为生产环境下的库，为了尽量避免误操作产生的损失，需要定期对库表进行备份。此处主要介绍：</p>
+<ul>
+<li>通过mysqldump工具进行备份的方法（mysql以 <a href="https://foreverzang.github.io/2023/05/28/mysql-docker/">docker方式部署</a>，其它方式雷同）</li>
+</ul>
+<h4 id="备份方式"><a href="#备份方式" class="headerlink" title="备份方式"></a>备份方式</h4><h5 id="mysqldump简介"><a href="#mysqldump简介" class="headerlink" title="mysqldump简介"></a>mysqldump简介</h5><p>mysqldump是MySQL自带的逻辑备份工具。它的备份原理是通过协议连接到 MySQL数据库，将需要备份的数据查询出来，将查询出的数据转换成对应的insert语句，当我们需要还原这些数据时，只要执行这些insert语句，即可将对应的数据还原。</p>
+<h5 id="mysqldump命令"><a href="#mysqldump命令" class="headerlink" title="mysqldump命令"></a>mysqldump命令</h5><ol>
+<li>mysqldump [选项] 数据库名 [表名] &gt; 脚本名</li>
+<li>mysqldump [选项] –数据库名 [选项 表名] &gt; 脚本名</li>
+<li>mysqldump [选项] –all-databases [选项] &gt; 脚本名</li>
+</ol>
+<h5 id="备份脚本"><a href="#备份脚本" class="headerlink" title="备份脚本"></a>备份脚本</h5><p>脚本位置：*&#x2F;opt&#x2F;mysql&#x2F;databak.sh*</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line">name=mysql-8.0.27</span><br><span class="line">db=douke_test</span><br><span class="line">dir=/opt/mysql/datadir</span><br><span class="line"></span><br><span class="line">echo &quot;$(date &#x27;+%Y-%m-%d %H:%M:%S&#x27;) backup $db data to file $dir/$&#123;db&#125;.sql.$(date +%Y%m%d) starting ... &quot;</span><br><span class="line">docker exec $name bash -c &quot;mysqldump --databases $db &gt; /var/lib/mysql/$&#123;db&#125;.sql.$(date +%Y%m%d)&quot;</span><br><span class="line">echo &quot;$(date &#x27;+%Y-%m-%d %H:%M:%S&#x27;) backup $db data to file $dir/$&#123;db&#125;.sql.$(date +%Y%m%d) finished !~~ &quot;</span><br></pre></td></tr></table></figure>
+
+<h4 id="定时任务"><a href="#定时任务" class="headerlink" title="定时任务"></a>定时任务</h4><p>安装目录：*&#x2F;opt&#x2F;mysql&#x2F;*</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@mysql mysql]# crontab -l</span><br><span class="line">30 05 * * * /usr/bin/sh /opt/mysql/databak.sh &gt;&gt; /opt/mysql/logs/databak.log 2&gt;&amp;1</span><br><span class="line">[root@mysql mysql]# tail -10f /var/log/cron</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">定时任务执行日志记录</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E7%AC%94%E8%AE%B0/" rel="tag"><i class="fa fa-tag"></i> 笔记</a>
+              <a href="/tags/mysql/" rel="tag"><i class="fa fa-tag"></i> mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/05/28/redis-notes/" rel="prev" title="Redis原理介绍、备忘录等">
+      <i class="fa fa-chevron-left"></i> Redis原理介绍、备忘录等
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/05/28/mysql-setup/" rel="next" title="安装Mysql服务">
+      安装Mysql服务 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+  </div>
+  
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">1.</span> <span class="nav-text">常用命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B4%A6%E5%8F%B7%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95"><span class="nav-number">1.1.</span> <span class="nav-text">账号密码登录</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%9A%E8%BF%87sql%E5%AF%BC%E5%85%A5%E6%95%B0%E6%8D%AE"><span class="nav-number">1.2.</span> <span class="nav-text">通过sql导入数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%BC%E5%85%A5%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">1.3.</span> <span class="nav-text">导入数据库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%BC%E5%87%BA%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">1.4.</span> <span class="nav-text">导出数据库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E7%94%A8%E6%88%B7%E5%B9%B6%E6%8E%88%E6%9D%83"><span class="nav-number">1.5.</span> <span class="nav-text">创建用户并授权</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E7%94%A8%E6%88%B7%E5%8F%8A%E6%9D%83%E9%99%90"><span class="nav-number">1.6.</span> <span class="nav-text">查看用户及权限</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B7%A8%E5%BA%93%E4%BA%8B%E5%8A%A1"><span class="nav-number">2.</span> <span class="nav-text">跨库事务</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%8C%E4%B8%80%E4%B8%AAmysql%E5%AE%9E%E4%BE%8B%EF%BC%8CA%E5%BA%93%E5%92%8CB%E5%BA%93%E5%9C%A8%E5%90%8C%E4%B8%80%E4%B8%AA%E4%BA%8B%E5%8A%A1%E4%B8%AD"><span class="nav-number">2.1.</span> <span class="nav-text">同一个mysql实例，A库和B库在同一个事务中</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="nav-number">3.</span> <span class="nav-text">性能优化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Explain%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92%E5%88%86%E6%9E%90%E5%99%A8"><span class="nav-number">3.1.</span> <span class="nav-text">Explain执行计划分析器</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Explain%E8%AF%AD%E6%B3%95"><span class="nav-number">3.1.1.</span> <span class="nav-text">Explain语法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Explain%E8%A7%A3%E9%87%8A"><span class="nav-number">3.1.2.</span> <span class="nav-text">Explain解释</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Explain%E6%8C%87%E6%A0%87"><span class="nav-number">3.1.3.</span> <span class="nav-text">Explain指标</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E5%A4%87%E4%BB%BD"><span class="nav-number">4.</span> <span class="nav-text">定时备份</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%87%E4%BB%BD%E6%96%B9%E5%BC%8F"><span class="nav-number">4.1.</span> <span class="nav-text">备份方式</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#mysqldump%E7%AE%80%E4%BB%8B"><span class="nav-number">4.1.1.</span> <span class="nav-text">mysqldump简介</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#mysqldump%E5%91%BD%E4%BB%A4"><span class="nav-number">4.1.2.</span> <span class="nav-text">mysqldump命令</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A4%87%E4%BB%BD%E8%84%9A%E6%9C%AC"><span class="nav-number">4.1.3.</span> <span class="nav-text">备份脚本</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1"><span class="nav-number">4.2.</span> <span class="nav-text">定时任务</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zangh"
+      src="/images/my-avatar.jpg">
+  <p class="site-author-name" itemprop="name">zangh</p>
+  <div class="site-description" itemprop="description">不积跬步 无以至千里</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">57</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=1950343972&auto=1&height=66"></iframe>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ForeverZang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ForeverZang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/7619861326" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;7619861326" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://gitee.com/www.bau123.com" title="https:&#x2F;&#x2F;gitee.com&#x2F;www.bau123.com" rel="noopener" target="_blank">Gitee</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/u012285269" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;u012285269" rel="noopener" target="_blank">CSDN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mvnrepository.com/" title="https:&#x2F;&#x2F;mvnrepository.com" rel="noopener" target="_blank">Maven</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://tool.lu/c/other" title="https:&#x2F;&#x2F;tool.lu&#x2F;c&#x2F;other" rel="noopener" target="_blank">Tools</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://regexper.com/" title="https:&#x2F;&#x2F;regexper.com" rel="noopener" target="_blank">Regexper</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/ForeverZang/ForeverZang" title="https:&#x2F;&#x2F;github.com&#x2F;ForeverZang&#x2F;ForeverZang" rel="noopener" target="_blank">Images</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zangh</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">251k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">3:48</span>
+</div>
+
+        
+
+
+
+
+
+
+<script data-pjax>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"mduyVmAWkh7R2nK98LxGBuFp-gzGzoHsz","app_key":"oncH6LSVH5snGThBoRpokkWT","server_url":null,"security":false};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+    </div>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":140,"height":240},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

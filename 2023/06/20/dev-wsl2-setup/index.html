@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"foreverzang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="WSL简介 Windows Subsystem for Linux（简称WSL）是一个在Windows 10\11上能够运行原生Linux二进制可执行文件（ELF格式）的兼容层。它是由微软与Canonical公司合作开发，其目标是使纯正的Ubuntu、Debian等映像能下载和解压到用户的本地计算机，并且映像内的工具和实用工具能在此子系统上原生运行。   WSL提供了一个微软开发的Linux兼容内">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WSL2开发环境搭建">
+<meta property="og:url" content="https://foreverzang.github.io/2023/06/20/dev-wsl2-setup/index.html">
+<meta property="og:site_name" content="zangh&#39;s blog">
+<meta property="og:description" content="WSL简介 Windows Subsystem for Linux（简称WSL）是一个在Windows 10\11上能够运行原生Linux二进制可执行文件（ELF格式）的兼容层。它是由微软与Canonical公司合作开发，其目标是使纯正的Ubuntu、Debian等映像能下载和解压到用户的本地计算机，并且映像内的工具和实用工具能在此子系统上原生运行。   WSL提供了一个微软开发的Linux兼容内">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620135430.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620135945.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620143424.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620141825.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620142001.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620150609.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620150446.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230709142656.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230709143636.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230709144050.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230709145935.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230709145336.png">
+<meta property="article:published_time" content="2023-06-20T05:35:29.000Z">
+<meta property="article:modified_time" content="2023-09-07T09:25:30.313Z">
+<meta property="article:author" content="zangh">
+<meta property="article:tag" content="dev">
+<meta property="article:tag" content="WSL2">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620135430.png">
+
+<link rel="canonical" href="https://foreverzang.github.io/2023/06/20/dev-wsl2-setup/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>WSL2开发环境搭建 | zangh's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">zangh's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录 总结 备查</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://foreverzang.github.io/2023/06/20/dev-wsl2-setup/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/my-avatar.jpg">
+      <meta itemprop="name" content="zangh">
+      <meta itemprop="description" content="不积跬步 无以至千里">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="zangh's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          WSL2开发环境搭建
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-20 13:35:29" itemprop="dateCreated datePublished" datetime="2023-06-20T13:35:29+08:00">2023-06-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-09-07 17:25:30" itemprop="dateModified" datetime="2023-09-07T17:25:30+08:00">2023-09-07</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" itemprop="url" rel="index"><span itemprop="name">开发环境</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/Linux/WSL2/" itemprop="url" rel="index"><span itemprop="name">WSL2</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2023/06/20/dev-wsl2-setup/" class="post-meta-item leancloud_visitors" data-flag-title="WSL2开发环境搭建" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="WSL简介"><a href="#WSL简介" class="headerlink" title="WSL简介"></a>WSL简介</h3><blockquote>
+<p>Windows Subsystem for Linux（简称WSL）是一个在Windows 10\11上能够运行原生Linux二进制可执行文件（ELF格式）的兼容层。<br>它是由微软与Canonical公司合作开发，其目标是使纯正的Ubuntu、Debian等映像能下载和解压到用户的本地计算机，并且映像内的工具和实用工具能在此子系统上原生运行。</p>
+</blockquote>
+<ul>
+<li>WSL提供了一个微软开发的Linux兼容内核接口（不包含Linux代码），来自Ubuntu的用户模式二进制文件在其上运行。</li>
+<li>WSL基于Windows NT内核虚拟了Linux内核接口，这允许它执行未经修改的Linux ELF64二进制文件。</li>
+<li>该子系统不能运行所有Linux软件，例如那些图形用户界面，以及那些需要未实现的Linux内核服务的软件。</li>
+</ul>
+<p>注：<strong>WSL用法类似VMWare、VirtualBox虚拟机软件，但是实现原理上不同且消耗资源更少</strong></p>
+<span id="more"></span>
+
+<h3 id="WSL安装"><a href="#WSL安装" class="headerlink" title="WSL安装"></a>WSL安装</h3><h4 id="wsl相关配置"><a href="#wsl相关配置" class="headerlink" title="wsl相关配置"></a>wsl相关配置</h4><ol>
+<li><p>打开 <strong>开发人员模式</strong> 开关<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620135430.png" alt="开发人员模式"></p>
+</li>
+<li><p>启用Windows的hyperV功能<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620135945.png" alt="启用hyperV功能"></p>
+</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># 如果通过UI操作，则不需要以下的命令配置</span></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">PS C:\Users\zangh&gt; dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">PS C:\Users\zangh&gt; dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart</span></span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>以上启用功能需要重启系统才能生效</li>
+</ol>
+<h4 id="安装wsl命令"><a href="#安装wsl命令" class="headerlink" title="安装wsl命令"></a>安装wsl命令</h4><ol>
+<li>打开PowerShell客户端，输入以下命令进行wsl安装</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\zangh&gt; wsl --install</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># Win11下默认就是wsl2，所以此处不需要</span></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">PS C:\Users\zangh&gt; wsl --set-default-version 2</span></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><p>安装Ubuntu-18.04<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620143424.png" alt="在商店中安装镜像"></p>
+</li>
+<li><p>启用Ubuntu-18.04</p>
+<ol>
+<li>点击上图中“打开”按钮</li>
+<li>其他</li>
+</ol>
+</li>
+</ol>
+<h4 id="管理wsl命令"><a href="#管理wsl命令" class="headerlink" title="管理wsl命令"></a>管理wsl命令</h4><h5 id="常用命令列举"><a href="#常用命令列举" class="headerlink" title="常用命令列举"></a>常用命令列举</h5><ol>
+<li>查看wsl状态</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\zangh&gt; wsl -l -v</span><br><span class="line">  NAME            STATE           VERSION</span><br><span class="line">* Ubuntu-18.04    Running         2</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><p>关闭wsl服务</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">停止所有的镜像</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">PS C:\Users\zangh&gt; wsl --shutdown</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">停止指定镜像</span></span><br><span class="line">PS C:\Users\zangh&gt; wsl -t Ubuntu-18.04</span><br><span class="line">PS C:\Users\zangh&gt; wsl -l -v</span><br><span class="line">  NAME            STATE           VERSION</span><br><span class="line">* Ubuntu-18.04    Stopped         2</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>导出wsl服务</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\zangh&gt; wsl --export Ubuntu-18.04 D:\个人资料\ubuntu18.04.tar</span><br><span class="line">PS C:\Users\zangh&gt; dir D:\个人资料</span><br></pre></td></tr></table></figure>
+<p><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620141825.png" alt="导出wsl镜像"><br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620142001.png" alt="导出wsl镜像"></p>
+</li>
+<li><p>注销wsl服务</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\zangh&gt; wsl --unregister Ubuntu-18.04</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>导入wsl服务</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PS C:\Users\zangh&gt; wsl --import Ubuntu-18.04 D:\个人资料\ubuntu18.04.tar</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h5 id="所有命令说明"><a href="#所有命令说明" class="headerlink" title="所有命令说明"></a>所有命令说明</h5><ul>
+<li>列出分发：wsl -l</li>
+<li>运行指定分发：wsl -d &lt;分发&gt;</li>
+<li>更改新分发的默认安装版本：wsl –set-default-version <Version></li>
+<li>将分发设置为默认值：wsl -s &lt;分发&gt;</li>
+<li>更改指定分发的版本：wsl –set-version &lt;分发&gt; &lt;版本&gt;</li>
+<li>立即终止所有运行的分发及 WSL2：wsl –shutdown</li>
+<li>终止指定的分发（相当于关机）：wsl -t &lt;分发&gt;</li>
+<li>注销分发并删除根文件系统：wsl –unregister &lt;分发&gt;</li>
+<li>将指定的 tar 文件作为新分发导入：wsl –import <Distro> <InstallLocation> <FileName></li>
+<li>将分发导出到 tar 文件：wsl –export &lt;Distro[分发]&gt; &lt;FileName[文件名，包含文件全路径]&gt;<br>例如：把分发CentOS7导出命令：wsl –export CentOS7 E:\CentOS7\rootfs.tar</li>
+</ul>
+<h4 id="wsl安装错误"><a href="#wsl安装错误" class="headerlink" title="wsl安装错误"></a>wsl安装错误</h4><h5 id="错误码：0x8007019e"><a href="#错误码：0x8007019e" class="headerlink" title="错误码：0x8007019e"></a>错误码：0x8007019e</h5><h6 id="错误现象"><a href="#错误现象" class="headerlink" title="错误现象"></a>错误现象</h6><p>WslRegisterDistribution failed with error: 0x8007019e</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Installing, this may take a few minutes...</span><br><span class="line">Installation Failed!</span><br><span class="line">Error: 0x8007019e</span><br><span class="line">Press any key to continue...</span><br></pre></td></tr></table></figure>
+<p>原因：出现这个error的原因是：未安装Windows子系统支持。</p>
+<h6 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h6><ol>
+<li>win+x，选择Windows PowerShell（管理员）</li>
+<li>输入：Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux</li>
+<li>回车，输入Y，重启！<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620150609.png" alt="启用虚拟机平台服务"></li>
+<li>重新打开已经安装的子系统，等几分钟，输入账户和密码。</li>
+</ol>
+<h5 id="错误码：0x800701bc"><a href="#错误码：0x800701bc" class="headerlink" title="错误码：0x800701bc"></a>错误码：0x800701bc</h5><h6 id="错误原因"><a href="#错误原因" class="headerlink" title="错误原因"></a>错误原因</h6><p>wsl1升级到wsl2之后，内核却没有升级，所以会出现这种错误提示！</p>
+<h6 id="解决办法-1"><a href="#解决办法-1" class="headerlink" title="解决办法"></a>解决办法</h6><ol>
+<li>下载最新的wsl安装包：<a target="_blank" rel="noopener" href="https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi">wsl_update_x64.msi</a></li>
+<li>安装包下载后，直接运行安装。</li>
+</ol>
+<h5 id="错误码：0x80370102"><a href="#错误码：0x80370102" class="headerlink" title="错误码：0x80370102"></a>错误码：0x80370102</h5><h6 id="错误原因-1"><a href="#错误原因-1" class="headerlink" title="错误原因"></a>错误原因</h6><p>没有开启虚拟化</p>
+<h6 id="解决办法-2"><a href="#解决办法-2" class="headerlink" title="解决办法"></a>解决办法</h6><ol>
+<li>控制面板-&gt;程序-&gt;启用或关闭windows功能，勾选虚拟机平台选项。<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230620150446.png" alt="启用虚拟机平台服务"></li>
+<li>重启电脑</li>
+</ol>
+<h4 id="切换wsl源（国内）"><a href="#切换wsl源（国内）" class="headerlink" title="切换wsl源（国内）"></a>切换wsl源（国内）</h4><h5 id="备份原文件"><a href="#备份原文件" class="headerlink" title="备份原文件"></a>备份原文件</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">zangh@zangh-pc:/etc/apt# su root</span><br><span class="line">输入密码</span><br><span class="line">root@zangh-pc:/etc/apt# cp sources.list sources.list.backup</span><br></pre></td></tr></table></figure>
+
+<h5 id="国内镜像源"><a href="#国内镜像源" class="headerlink" title="国内镜像源"></a>国内镜像源</h5><h6 id="阿里云"><a href="#阿里云" class="headerlink" title="阿里云"></a>阿里云</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse</span><br><span class="line">deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse</span><br><span class="line">deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse</span><br><span class="line">deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse</span><br><span class="line">deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse</span><br><span class="line">deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse</span><br><span class="line">deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse</span><br><span class="line">deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse</span><br><span class="line">deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse</span><br><span class="line">deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse</span><br></pre></td></tr></table></figure>
+<h6 id="中科大"><a href="#中科大" class="headerlink" title="中科大"></a>中科大</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">deb https://mirrors.ustc.edu.cn/ubuntu/ bionic main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.ustc.edu.cn/ubuntu/ bionic main restricted universe multiverse</span><br><span class="line">deb https://mirrors.ustc.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.ustc.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse</span><br><span class="line">deb https://mirrors.ustc.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.ustc.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse</span><br><span class="line">deb https://mirrors.ustc.edu.cn/ubuntu/ bionic-security main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.ustc.edu.cn/ubuntu/ bionic-security main restricted universe multiverse</span><br><span class="line">deb https://mirrors.ustc.edu.cn/ubuntu/ bionic-proposed main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.ustc.edu.cn/ubuntu/ bionic-proposed main restricted universe multiverse</span><br></pre></td></tr></table></figure>
+<h6 id="清华"><a href="#清华" class="headerlink" title="清华"></a>清华</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic main restricted universe multiverse</span><br><span class="line">deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse</span><br><span class="line">deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse</span><br><span class="line">deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-security main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-security main restricted universe multiverse</span><br><span class="line">deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-proposed main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-proposed main restricted universe multiverse</span><br></pre></td></tr></table></figure>
+
+<h5 id="替换镜像源"><a href="#替换镜像源" class="headerlink" title="替换镜像源"></a>替换镜像源</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@zangh-pc:/etc/apt# echo &#x27;&#x27; &gt; sources.list &amp;&amp; vi sources.list</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">黏贴阿里云镜像配置</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="刷新源配置"><a href="#刷新源配置" class="headerlink" title="刷新源配置"></a>刷新源配置</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@zangh-pc:/etc/apt# apt-get update &amp;&amp; apt-get upgrade</span><br></pre></td></tr></table></figure>
+
+<h4 id="wsl远程连接"><a href="#wsl远程连接" class="headerlink" title="wsl远程连接"></a>wsl远程连接</h4><h5 id="启用ssh服务"><a href="#启用ssh服务" class="headerlink" title="启用ssh服务"></a>启用ssh服务</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">root@zangh-pc:/etc/ssh# service ssh start</span><br><span class="line">[sudo] password for zangh:</span><br><span class="line"> * Starting OpenBSD Secure Shell server sshd                                                                Could not load host key: /etc/ssh/ssh_host_rsa_key</span><br><span class="line">Could not load host key: /etc/ssh/ssh_host_ecdsa_key</span><br><span class="line">Could not load host key: /etc/ssh/ssh_host_ed25519_key</span><br><span class="line">root@zangh-pc:/etc/ssh$ service ssh status</span><br><span class="line"> * sshd is running</span><br></pre></td></tr></table></figure>
+<ul>
+<li>可以看到上sshd服务虽然启动成功了，但是报缺少ssh_host_ecdsa_key、ssh_host_ed25519_key文件（导致后面无法远程ssh登录）<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Connecting to 192.168.21x.x:22...</span><br><span class="line">Connection established.</span><br><span class="line">To escape to local shell, press Ctrl+Alt+].</span><br><span class="line"></span><br><span class="line">Socket error Event: 32 Error: 10053.</span><br><span class="line">Connection closing...Socket close.</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h5 id="生成ssh文件"><a href="#生成ssh文件" class="headerlink" title="生成ssh文件"></a>生成ssh文件</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@zangh-pc:/etc/ssh# dpkg-reconfigure openssh-server</span><br></pre></td></tr></table></figure>
+
+<h5 id="启用密码登录"><a href="#启用密码登录" class="headerlink" title="启用密码登录"></a>启用密码登录</h5><p>默认wsl2的ubuntu版本中禁用了账号密码登录的功能</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@zangh-pc:/etc/ssh# vi /etc/ssh/sshd_config</span><br><span class="line">PasswordAuthentication yes</span><br></pre></td></tr></table></figure>
+
+<h5 id="重启ssh服务"><a href="#重启ssh服务" class="headerlink" title="重启ssh服务"></a>重启ssh服务</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@zangh-pc:/etc/ssh# service ssh restart</span><br><span class="line"> * Restarting OpenBSD Secure Shell server sshd                [ OK ]</span><br></pre></td></tr></table></figure>
+
+<h5 id="重新连接ssh"><a href="#重新连接ssh" class="headerlink" title="重新连接ssh"></a>重新连接ssh</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">Welcome to Ubuntu 18.04.6 LTS (GNU/Linux 5.10.16.3-microsoft-standard-WSL2 x86_64)</span><br><span class="line"></span><br><span class="line"> * Documentation:  https://help.ubuntu.com</span><br><span class="line"> * Management:     https://landscape.canonical.com</span><br><span class="line"> * Support:        https://ubuntu.com/advantage</span><br><span class="line"></span><br><span class="line">  System information as of Wed Jun 21 19:15:39 CST 2023</span><br><span class="line"></span><br><span class="line">  System load:  0.0                Processes:           37</span><br><span class="line">  Usage of /:   0.7% of 250.98GB   Users logged in:     0</span><br><span class="line">  Memory usage: 5%                 IP address for eth0: 172.22.151.127</span><br><span class="line">  Swap usage:   0%</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Expanded Security Maintenance for Infrastructure is not enabled.</span><br><span class="line"></span><br><span class="line">0 updates can be applied immediately.</span><br><span class="line"></span><br><span class="line">Enable ESM Infra to receive additional future security updates.</span><br><span class="line">See https://ubuntu.com/esm or run: sudo pro status</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Last login: Wed Jun 21 19:05:50 2023 from 172.22.144.1</span><br><span class="line">zangh@zangh-pc:~$ </span><br></pre></td></tr></table></figure>
+
+<h3 id="WSL开发"><a href="#WSL开发" class="headerlink" title="WSL开发"></a>WSL开发</h3><blockquote>
+<p>这里主要介绍 <strong>CLion + WSL</strong> 实现Windows环境下的Linux应用的开发和调试环境搭建</p>
+</blockquote>
+<p>工具准备：</p>
+<ul>
+<li>CLion 2022.3.1</li>
+<li>Windows11</li>
+<li>WSL2（Ubuntu-18.04）</li>
+<li>测试项目c-study02（构建工具为CMake）</li>
+</ul>
+<h4 id="配置工具链"><a href="#配置工具链" class="headerlink" title="配置工具链"></a>配置工具链</h4><p>菜单路径：File -&gt; Settings -&gt; Build,Execution,Deployment -&gt; Toolchains<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230709142656.png" alt="工具链配置"><br>CLion默认支持的工具类（开发编译环境）：</p>
+<ul>
+<li>MinGw（安装包较小，在Windows系统下虚拟出Linux-用的C库与真正的Linux有差别）</li>
+<li>Cygwin（安装包较大，在Windows系统下虚拟出Linux-用的C库与真正的Linux有差别）</li>
+<li>WSL（本文重点）</li>
+<li>System（系统默认，在本地查找，Linux环境下方便使用）</li>
+<li>Remote Host（远程）</li>
+<li>Docker（远程）</li>
+</ul>
+<h5 id="选择WSL"><a href="#选择WSL" class="headerlink" title="选择WSL"></a>选择WSL</h5><p>wsl的配置如下：<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230709143636.png" alt="工具链配置"></p>
+<h5 id="配置CMake"><a href="#配置CMake" class="headerlink" title="配置CMake"></a>配置CMake</h5><p>cmake配置如下：<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230709144050.png" alt="工具链配置"></p>
+<h5 id="项目调试"><a href="#项目调试" class="headerlink" title="项目调试"></a>项目调试</h5><p>下图为在Ubuntu中执行（相当于传统的远程调试）</p>
+<ol>
+<li><p>编译过程<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230709145935.png" alt="项目调试图"></p>
+</li>
+<li><p>调试输出<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/wsl/20230709145336.png" alt="项目调试图"></p>
+</li>
+</ol>
+<h3 id="WSL参考"><a href="#WSL参考" class="headerlink" title="WSL参考"></a>WSL参考</h3><ol>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/w492665264/article/details/127593308">wsl2 +ubuntu +linux开发环境</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_37085158/article/details/125172803">WslRegisterDistribution failed with error_ 0x8007019e、0x800701bc、0x80370102</a></li>
+<li><a target="_blank" rel="noopener" href="https://learn.microsoft.com/zh-cn/windows/wsl/">适用于 Linux 的 Windows 子系统文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/hjj801006/p/10898355.html">ssh连接：Socket error Event: 32 Error: 10053.</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/dev/" rel="tag"><i class="fa fa-tag"></i> dev</a>
+              <a href="/tags/WSL2/" rel="tag"><i class="fa fa-tag"></i> WSL2</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/19/java-notion-notes/" rel="prev" title="Java专业名词，概念术语等">
+      <i class="fa fa-chevron-left"></i> Java专业名词，概念术语等
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/20/dev-nginx-debug/" rel="next" title="Nginx调试环境搭建">
+      Nginx调试环境搭建 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+  </div>
+  
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">WSL简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL%E5%AE%89%E8%A3%85"><span class="nav-number">2.</span> <span class="nav-text">WSL安装</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#wsl%E7%9B%B8%E5%85%B3%E9%85%8D%E7%BD%AE"><span class="nav-number">2.1.</span> <span class="nav-text">wsl相关配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85wsl%E5%91%BD%E4%BB%A4"><span class="nav-number">2.2.</span> <span class="nav-text">安装wsl命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AE%A1%E7%90%86wsl%E5%91%BD%E4%BB%A4"><span class="nav-number">2.3.</span> <span class="nav-text">管理wsl命令</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E5%88%97%E4%B8%BE"><span class="nav-number">2.3.1.</span> <span class="nav-text">常用命令列举</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%89%80%E6%9C%89%E5%91%BD%E4%BB%A4%E8%AF%B4%E6%98%8E"><span class="nav-number">2.3.2.</span> <span class="nav-text">所有命令说明</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#wsl%E5%AE%89%E8%A3%85%E9%94%99%E8%AF%AF"><span class="nav-number">2.4.</span> <span class="nav-text">wsl安装错误</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%94%99%E8%AF%AF%E7%A0%81%EF%BC%9A0x8007019e"><span class="nav-number">2.4.1.</span> <span class="nav-text">错误码：0x8007019e</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%94%99%E8%AF%AF%E7%8E%B0%E8%B1%A1"><span class="nav-number">2.4.1.1.</span> <span class="nav-text">错误现象</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95"><span class="nav-number">2.4.1.2.</span> <span class="nav-text">解决办法</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%94%99%E8%AF%AF%E7%A0%81%EF%BC%9A0x800701bc"><span class="nav-number">2.4.2.</span> <span class="nav-text">错误码：0x800701bc</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%94%99%E8%AF%AF%E5%8E%9F%E5%9B%A0"><span class="nav-number">2.4.2.1.</span> <span class="nav-text">错误原因</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95-1"><span class="nav-number">2.4.2.2.</span> <span class="nav-text">解决办法</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%94%99%E8%AF%AF%E7%A0%81%EF%BC%9A0x80370102"><span class="nav-number">2.4.3.</span> <span class="nav-text">错误码：0x80370102</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%94%99%E8%AF%AF%E5%8E%9F%E5%9B%A0-1"><span class="nav-number">2.4.3.1.</span> <span class="nav-text">错误原因</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95-2"><span class="nav-number">2.4.3.2.</span> <span class="nav-text">解决办法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%87%E6%8D%A2wsl%E6%BA%90%EF%BC%88%E5%9B%BD%E5%86%85%EF%BC%89"><span class="nav-number">2.5.</span> <span class="nav-text">切换wsl源（国内）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A4%87%E4%BB%BD%E5%8E%9F%E6%96%87%E4%BB%B6"><span class="nav-number">2.5.1.</span> <span class="nav-text">备份原文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%9B%BD%E5%86%85%E9%95%9C%E5%83%8F%E6%BA%90"><span class="nav-number">2.5.2.</span> <span class="nav-text">国内镜像源</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%98%BF%E9%87%8C%E4%BA%91"><span class="nav-number">2.5.2.1.</span> <span class="nav-text">阿里云</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%B8%AD%E7%A7%91%E5%A4%A7"><span class="nav-number">2.5.2.2.</span> <span class="nav-text">中科大</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%B8%85%E5%8D%8E"><span class="nav-number">2.5.2.3.</span> <span class="nav-text">清华</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%9B%BF%E6%8D%A2%E9%95%9C%E5%83%8F%E6%BA%90"><span class="nav-number">2.5.3.</span> <span class="nav-text">替换镜像源</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%88%B7%E6%96%B0%E6%BA%90%E9%85%8D%E7%BD%AE"><span class="nav-number">2.5.4.</span> <span class="nav-text">刷新源配置</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#wsl%E8%BF%9C%E7%A8%8B%E8%BF%9E%E6%8E%A5"><span class="nav-number">2.6.</span> <span class="nav-text">wsl远程连接</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%90%AF%E7%94%A8ssh%E6%9C%8D%E5%8A%A1"><span class="nav-number">2.6.1.</span> <span class="nav-text">启用ssh服务</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%94%9F%E6%88%90ssh%E6%96%87%E4%BB%B6"><span class="nav-number">2.6.2.</span> <span class="nav-text">生成ssh文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%90%AF%E7%94%A8%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95"><span class="nav-number">2.6.3.</span> <span class="nav-text">启用密码登录</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%87%8D%E5%90%AFssh%E6%9C%8D%E5%8A%A1"><span class="nav-number">2.6.4.</span> <span class="nav-text">重启ssh服务</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%87%8D%E6%96%B0%E8%BF%9E%E6%8E%A5ssh"><span class="nav-number">2.6.5.</span> <span class="nav-text">重新连接ssh</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL%E5%BC%80%E5%8F%91"><span class="nav-number">3.</span> <span class="nav-text">WSL开发</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%B7%A5%E5%85%B7%E9%93%BE"><span class="nav-number">3.1.</span> <span class="nav-text">配置工具链</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%80%89%E6%8B%A9WSL"><span class="nav-number">3.1.1.</span> <span class="nav-text">选择WSL</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%85%8D%E7%BD%AECMake"><span class="nav-number">3.1.2.</span> <span class="nav-text">配置CMake</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E8%B0%83%E8%AF%95"><span class="nav-number">3.1.3.</span> <span class="nav-text">项目调试</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WSL%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">WSL参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zangh"
+      src="/images/my-avatar.jpg">
+  <p class="site-author-name" itemprop="name">zangh</p>
+  <div class="site-description" itemprop="description">不积跬步 无以至千里</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">57</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=1950343972&auto=1&height=66"></iframe>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ForeverZang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ForeverZang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/7619861326" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;7619861326" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://gitee.com/www.bau123.com" title="https:&#x2F;&#x2F;gitee.com&#x2F;www.bau123.com" rel="noopener" target="_blank">Gitee</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/u012285269" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;u012285269" rel="noopener" target="_blank">CSDN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mvnrepository.com/" title="https:&#x2F;&#x2F;mvnrepository.com" rel="noopener" target="_blank">Maven</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://tool.lu/c/other" title="https:&#x2F;&#x2F;tool.lu&#x2F;c&#x2F;other" rel="noopener" target="_blank">Tools</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://regexper.com/" title="https:&#x2F;&#x2F;regexper.com" rel="noopener" target="_blank">Regexper</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/ForeverZang/ForeverZang" title="https:&#x2F;&#x2F;github.com&#x2F;ForeverZang&#x2F;ForeverZang" rel="noopener" target="_blank">Images</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zangh</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">251k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">3:48</span>
+</div>
+
+        
+
+
+
+
+
+
+<script data-pjax>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"mduyVmAWkh7R2nK98LxGBuFp-gzGzoHsz","app_key":"oncH6LSVH5snGThBoRpokkWT","server_url":null,"security":false};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+    </div>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":140,"height":240},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

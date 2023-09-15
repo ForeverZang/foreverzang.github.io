@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"foreverzang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="笔记简介服务安装参考：  安装Nginx服务（容器） 安装Nginx服务  主要内容：  指令解释说明 指令差异对比">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Nginx配置介绍、备忘录等">
+<meta property="og:url" content="https://foreverzang.github.io/2023/06/02/nginx-notes/index.html">
+<meta property="og:site_name" content="zangh&#39;s blog">
+<meta property="og:description" content="笔记简介服务安装参考：  安装Nginx服务（容器） 安装Nginx服务  主要内容：  指令解释说明 指令差异对比">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nginx/20230607163311.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nginx/20230607163353.png">
+<meta property="article:published_time" content="2023-06-02T08:00:19.000Z">
+<meta property="article:modified_time" content="2023-08-25T03:19:19.849Z">
+<meta property="article:author" content="zangh">
+<meta property="article:tag" content="笔记">
+<meta property="article:tag" content="Nginx">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nginx/20230607163311.png">
+
+<link rel="canonical" href="https://foreverzang.github.io/2023/06/02/nginx-notes/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Nginx配置介绍、备忘录等 | zangh's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">zangh's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录 总结 备查</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://foreverzang.github.io/2023/06/02/nginx-notes/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/my-avatar.jpg">
+      <meta itemprop="name" content="zangh">
+      <meta itemprop="description" content="不积跬步 无以至千里">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="zangh's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Nginx配置介绍、备忘录等
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-02 16:00:19" itemprop="dateCreated datePublished" datetime="2023-06-02T16:00:19+08:00">2023-06-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-08-25 11:19:19" itemprop="dateModified" datetime="2023-08-25T11:19:19+08:00">2023-08-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/" itemprop="url" rel="index"><span itemprop="name">中间件</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E7%BD%91%E5%85%B3/" itemprop="url" rel="index"><span itemprop="name">网关</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E7%BD%91%E5%85%B3/Nginx/" itemprop="url" rel="index"><span itemprop="name">Nginx</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2023/06/02/nginx-notes/" class="post-meta-item leancloud_visitors" data-flag-title="Nginx配置介绍、备忘录等" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="笔记简介"><a href="#笔记简介" class="headerlink" title="笔记简介"></a>笔记简介</h3><p>服务安装参考：</p>
+<ul>
+<li><a href="https://foreverzang.github.io/2023/05/28/nginx-docker">安装Nginx服务（容器）</a></li>
+<li><a href="https://foreverzang.github.io/2023/05/31/nginx-setup">安装Nginx服务</a></li>
+</ul>
+<p>主要内容：</p>
+<ul>
+<li>指令解释说明</li>
+<li>指令差异对比</li>
+</ul>
+<span id="more"></span>
+
+<h3 id="配置说明"><a href="#配置说明" class="headerlink" title="配置说明"></a>配置说明</h3><h4 id="指令解释说明"><a href="#指令解释说明" class="headerlink" title="指令解释说明"></a>指令解释说明</h4><h5 id="daemon指令"><a href="#daemon指令" class="headerlink" title="daemon指令"></a>daemon指令</h5><p>在生产环境中，请不要使用 daemon 和 master_process 指令。这些选项仅用于开发调试。当然，你也可以在生产环境中设置 daemon off，然后使用进程管理工具启动<br>Nginx，但是，平滑重启、升级等功能将无法使用。master_process off 绝对不应该用于生产环境。</p>
+<h6 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h6><p>daemon on|off</p>
+<h6 id="默认值"><a href="#默认值" class="headerlink" title="默认值"></a>默认值</h6><p>no</p>
+<h6 id="使用环境"><a href="#使用环境" class="headerlink" title="使用环境"></a>使用环境</h6><p>main</p>
+<h6 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h6><p>daemon off</p>
+<h5 id="master-process指令"><a href="#master-process指令" class="headerlink" title="master_process指令"></a>master_process指令</h5><p>生产环境中，请不要使用 daemon 和 master_process 指令，这些选项主要用于开发调试。</p>
+<h6 id="语法-1"><a href="#语法-1" class="headerlink" title="语法"></a>语法</h6><p>master_process on|off</p>
+<h6 id="默认值-1"><a href="#默认值-1" class="headerlink" title="默认值"></a>默认值</h6><p>on</p>
+<h6 id="使用环境-1"><a href="#使用环境-1" class="headerlink" title="使用环境"></a>使用环境</h6><p>main</p>
+<h6 id="示例-1"><a href="#示例-1" class="headerlink" title="示例"></a>示例</h6><p>master_process off</p>
+<h5 id="user指令"><a href="#user指令" class="headerlink" title="user指令"></a>user指令</h5><p>该指令用于指定运行 Nginx Worker 进程的用户和组，默认的用户名和组名都是 nobody。如过组名没有指定，Nginx则默认组名与用户名相同。</p>
+<h6 id="语法-2"><a href="#语法-2" class="headerlink" title="语法"></a>语法</h6><p>user [user] [group]</p>
+<h6 id="默认值-2"><a href="#默认值-2" class="headerlink" title="默认值"></a>默认值</h6><p>nobody nobody</p>
+<h6 id="示例-2"><a href="#示例-2" class="headerlink" title="示例"></a>示例</h6><p>user www users;</p>
+<h5 id="env指令"><a href="#env指令" class="headerlink" title="env指令"></a>env指令</h5><p>此项指令用来定义变量集合，以下场合需更改环境变量，或者添加新的环境变量：</p>
+<ul>
+<li>在零停机环境下平滑升级Nginx时；</li>
+<li>启用Nginx内置Perl模块时使用；</li>
+<li>被Nginx进程所使用。</li>
+</ul>
+<h6 id="语法-3"><a href="#语法-3" class="headerlink" title="语法"></a>语法</h6><p>env VAR|VAR&#x3D;VALUE</p>
+<h6 id="使用环境-2"><a href="#使用环境-2" class="headerlink" title="使用环境"></a>使用环境</h6><p>main</p>
+<h6 id="默认值-3"><a href="#默认值-3" class="headerlink" title="默认值"></a>默认值</h6><p>TZ</p>
+<h6 id="示例-3"><a href="#示例-3" class="headerlink" title="示例"></a>示例</h6><p>如果没有明确定义TZ的值，默认情况下它集成老版本的值，且默认情况下内置的Perl模块总是可以使用TZ值的。</p>
+<ul>
+<li>env MALLOC_OPTIONS;</li>
+<li>env PERL5LIB&#x3D;&#x2F;data&#x2F;site&#x2F;modules;</li>
+<li>env OPENSSL_ALLOW_PROXY_CERTS&#x3D;1</li>
+</ul>
+<h5 id="error-log指令"><a href="#error-log指令" class="headerlink" title="error_log指令"></a>error_log指令</h5><p>file<br>参数用来指定记录Nginx及FastCGI错误日志的文件路径。错误日志记录了服务器运行期间遇到的各种错误，以及一些普通的诊断信息，我们可以设置日志文件记录错误级别的高低，控制日志文件记录信息的数量和类型。通常情况下，Nginx分为6个错误级别，其中debug级别最低，记录的错误日志数量最多，范围最广；而crit级别最高，只记录非常严重的错误，一般在生产环境中使用。</p>
+<p>日志中默认的错误级别：</p>
+<ul>
+<li>main部分：error</li>
+<li>http部分：crit</li>
+<li>server部分：crit</li>
+</ul>
+<p>Nginx支持将不同虚拟主机的日志存储在不同的位置，这是个很有特色的功能。在lighttpd中，它们一直拒绝提供类似的功能。</p>
+<h6 id="语法-4"><a href="#语法-4" class="headerlink" title="语法"></a>语法</h6><p>error_log file [ debug|info|notice|warn|error|crit ]</p>
+<h6 id="默认值-4"><a href="#默认值-4" class="headerlink" title="默认值"></a>默认值</h6><p>${prefix}&#x2F;logs&#x2F;error.log</p>
+<h6 id="使用环境-3"><a href="#使用环境-3" class="headerlink" title="使用环境"></a>使用环境</h6><p>main</p>
+<h6 id="示例-4"><a href="#示例-4" class="headerlink" title="示例"></a>示例</h6><p>error_log &#x2F;var&#x2F;logs&#x2F;nginx&#x2F;error.log crit</p>
+<blockquote>
+<p>禁用： error_log &#x2F;dev&#x2F;null crit;（注：error_log off 无法禁用日志）</p>
+</blockquote>
+<h5 id="include指令"><a href="#include指令" class="headerlink" title="include指令"></a>include指令</h5><p>使用此指令，可以包含任何你想要包含的配置文件。从0.4.4开始，include指令开始支持文件名匹配。</p>
+<blockquote>
+<p>注意：直到0.67版本为止，include文件的路径是相对于configure时由–prefix&#x3D;&lt;PATH&gt;指令指定的路径而言的，默认情况下是&#x2F;usr&#x2F;local&#x2F;nginx。<br>如果在编译compiledNginx时你没有指定这个值，请使用绝对路径。</p>
+</blockquote>
+<h6 id="语法-5"><a href="#语法-5" class="headerlink" title="语法"></a>语法</h6><p>include file | *</p>
+<h6 id="默认值-5"><a href="#默认值-5" class="headerlink" title="默认值"></a>默认值</h6><p>无</p>
+<h6 id="使用环境-4"><a href="#使用环境-4" class="headerlink" title="使用环境"></a>使用环境</h6><p>http</p>
+<h6 id="示例-5"><a href="#示例-5" class="headerlink" title="示例"></a>示例</h6><p>include vhosts&#x2F;*.conf;</p>
+<h5 id="autoindex指令"><a href="#autoindex指令" class="headerlink" title="autoindex指令"></a>autoindex指令</h5><h6 id="示例-6"><a href="#示例-6" class="headerlink" title="示例"></a>示例</h6><p>当要显示目录时，需要注释index配置</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">    autoindex            on;         ## 列出整个目录列表</span><br><span class="line">    autoindex_exact_size on;         ## 以kB或者MB或者GB单位显示出文件的大小，而不是字节</span><br><span class="line">    autoindex_localtime  on;         ## 显示的文件时间为文件的服务器时间</span><br><span class="line">    #index index.html;               ## 注：当要显示目录时，需要注释index配置</span><br><span class="line">    root                 html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="rewrite指令"><a href="#rewrite指令" class="headerlink" title="rewrite指令"></a>rewrite指令</h5><h5 id="error-page指令"><a href="#error-page指令" class="headerlink" title="error_page指令"></a>error_page指令</h5><p>该指令用于设置如果出现指定的HTTP错误状态码，则返回给客户端显示的对应URI地址。</p>
+<h6 id="语法-6"><a href="#语法-6" class="headerlink" title="语法"></a>语法</h6><p>error_page code [code …][&#x3D;|&#x3D;answer-code] uri</p>
+<h6 id="默认值-6"><a href="#默认值-6" class="headerlink" title="默认值"></a>默认值</h6><p>no</p>
+<h6 id="使用环境-5"><a href="#使用环境-5" class="headerlink" title="使用环境"></a>使用环境</h6><p>http,server,location,if in condition</p>
+<h6 id="示例-7"><a href="#示例-7" class="headerlink" title="示例"></a>示例</h6><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">    error_page 404 /404.html</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="功能模块配置"><a href="#功能模块配置" class="headerlink" title="功能模块配置"></a>功能模块配置</h4><h5 id="gzip压缩模块"><a href="#gzip压缩模块" class="headerlink" title="gzip压缩模块"></a>gzip压缩模块</h5><h6 id="示例-8"><a href="#示例-8" class="headerlink" title="示例"></a>示例</h6><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">    gzip                 on;         ## 开启压缩功能</span><br><span class="line">    gzip_min_length      1k;         ## 大于此长度，才开始压缩操作</span><br><span class="line">    gzip_buffers      4 16k;         ## 缓存配置</span><br><span class="line">    gzip_http_version   1.1;         ## 支持的http版本1.1+</span><br><span class="line">    gzip_comp_level       2;         ## 压缩级别1~9，压缩级别越高，越消耗CPU</span><br><span class="line">    gzip_types        text/plain application/x-javascript text/css application/xml;</span><br><span class="line">    gzip_vary            on;         ## 设置压缩头部</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="ssl加解密模块"><a href="#ssl加解密模块" class="headerlink" title="ssl加解密模块"></a>ssl加解密模块</h5><h6 id="证书工具"><a href="#证书工具" class="headerlink" title="证书工具"></a>证书工具</h6><blockquote>
+<p>常用的证书工具：openssl、keytool</p>
+</blockquote>
+<ul>
+<li>keytool没办法签发证书，而openssl能够进行签发和证书链的管理（因此，keytool 签发的所谓证书只是一种 自签名证书）</li>
+<li>keytool自己就没办法做证书链，需要用到openssl</li>
+<li>keytool 其实是 JDK 提供给我们弄些 JDK 能认识的证书的（因此，我们用 keytool 的目的，更多的是在这里：让Java编写的程序能用上证书）。</li>
+</ul>
+<h6 id="OpenSSL"><a href="#OpenSSL" class="headerlink" title="OpenSSL"></a>OpenSSL</h6><h5 id="HTTP-Auth-Basic-模块"><a href="#HTTP-Auth-Basic-模块" class="headerlink" title="HTTP Auth Basic 模块"></a>HTTP Auth Basic 模块</h5><p>该模块采用基于HTTP基本身份验证的用户名和密码登录方式，来保护你的虚拟主机或目录。<br>示例如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">location /myauth &#123;</span><br><span class="line">    autoindex                         on;       ## 列出整个目录列表</span><br><span class="line">    autoindex_exact_size              on;       ## 以kB或者MB或者GB单位显示出文件的大小，而不是字节</span><br><span class="line">    autoindex_localtime               on;       ## 显示的文件时间为文件的服务器时间</span><br><span class="line">    auth_basic             &quot;ForeverZang&quot;;       ## 认证名称，命名随意</span><br><span class="line">    auth_basic_user_file        htpasswd;       ## 密码文件，相对路径（nginx.conf的根目录）；或绝对路径</span><br><span class="line">    alias                      html/docs;       ## 文件目录      </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h6 id="生成密码文件"><a href="#生成密码文件" class="headerlink" title="生成密码文件"></a>生成密码文件</h6><p>需要用到 htpasswd 工具生成密码文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@centos7 nginx]# htpasswd /usr/local/nginx/conf/htpasswd zangh</span><br><span class="line">New password: </span><br><span class="line">Re-type new password: </span><br><span class="line">Updating password for user zangh</span><br><span class="line">[root@centos7 nginx]# cat /usr/local/nginx/conf/htpasswd</span><br><span class="line">zangh:$apr1$5zIZuKY4$Y6GTJPst6mFzZcymFAnLE/</span><br></pre></td></tr></table></figure>
+
+<h6 id="重启服务验证"><a href="#重启服务验证" class="headerlink" title="重启服务验证"></a>重启服务验证</h6><p>访问地址：http:&#x2F;&#x2F;{server}:{port}&#x2F;myauth&#x2F;<br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nginx/20230607163311.png" alt="账号密码验证"><br><img data-src="https://raw.githubusercontent.com/ForeverZang/ForeverZang/main/nginx/20230607163353.png" alt="服务文件列表"></p>
+<h4 id="指令差异对比"><a href="#指令差异对比" class="headerlink" title="指令差异对比"></a>指令差异对比</h4><h5 id="location块中root与alias的区别"><a href="#location块中root与alias的区别" class="headerlink" title="location块中root与alias的区别"></a>location块中root与alias的区别</h5><blockquote>
+<p>主要区别：<strong>nginx</strong> 如何解释 location 后面的 <strong>uri</strong>，这会使两者分别以不同的方式将请求映射到服务器文件上。</p>
+</blockquote>
+<ul>
+<li><p>root：将location块的 ”url路径” 带入到 ”root指令路径” 中，例如：</p>
+<ul>
+<li>示例1：<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">location /download &#123;</span><br><span class="line">   autoindex            on;</span><br><span class="line">   autoindex_exact_size on;</span><br><span class="line">   autoindex_localtime  on;</span><br><span class="line">   root                 html;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求1：&#123;server&#125;:&#123;ip&#125;/download                         ===&gt; ./html/download</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求2：&#123;server&#125;:&#123;ip&#125;/download/test.html               ===&gt; ./html/download/test.html</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求3：&#123;server&#125;:&#123;ip&#125;/download/test.html?a=1&amp;b=2       ===&gt; ./html/download/test.html?a=1&amp;b=2</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求4：&#123;server&#125;:&#123;ip&#125;/download/test.html?a=1<span class="comment">#anc       ===&gt; ./html/download/test.html?a=1#anc</span></span></span><br></pre></td></tr></table></figure></li>
+<li>示例2：<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">location /download/doc &#123;</span><br><span class="line">   autoindex            on;</span><br><span class="line">   autoindex_exact_size on;</span><br><span class="line">   autoindex_localtime  on;</span><br><span class="line">   root                 html;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求1：&#123;server&#125;:&#123;ip&#125;/download/doc                     ===&gt; ./html/download/doc</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求2：&#123;server&#125;:&#123;ip&#125;/download/doc/test.html           ===&gt; ./html/download/doc/test.html</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求3：&#123;server&#125;:&#123;ip&#125;/download/doc/test.html?a=1&amp;b=2   ===&gt; ./html/download/doc/test.html?a=1&amp;b=2</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求4：&#123;server&#125;:&#123;ip&#125;/download/doc/test.html?a=1<span class="comment">#anc   ===&gt; ./html/download/doc/test.html?a=1#anc</span></span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>alias：直接将location块的 ”url路径” 与 ”alias指令路径” 建立对应关系。</p>
+<ul>
+<li>示例1（完成download &lt;&#x3D;&#x3D;&gt; html映射）：<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">location /download &#123;</span><br><span class="line">   autoindex            on;</span><br><span class="line">   autoindex_exact_size on;</span><br><span class="line">   autoindex_localtime  on;</span><br><span class="line">   root                 html;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求1：&#123;server&#125;:&#123;ip&#125;/download                         ===&gt; ./html</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求2：&#123;server&#125;:&#123;ip&#125;/download/test.html               ===&gt; ./html/test.html</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求3：&#123;server&#125;:&#123;ip&#125;/download/test.html?a=1&amp;b=2       ===&gt; ./html/test.html?a=1&amp;b=2</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求4：&#123;server&#125;:&#123;ip&#125;/download/test.html?a=1<span class="comment">#anc       ===&gt; ./html/test.html?a=1#anc</span></span></span><br></pre></td></tr></table></figure></li>
+<li>示例2（完成download&#x2F;doc &lt;&#x3D;&#x3D;&gt; html映射）：<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">location /download/doc &#123;</span><br><span class="line">   autoindex            on;</span><br><span class="line">   autoindex_exact_size on;</span><br><span class="line">   autoindex_localtime  on;</span><br><span class="line">   root                 html;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求1：&#123;server&#125;:&#123;ip&#125;/download/doc                     ===&gt; ./html</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求2：&#123;server&#125;:&#123;ip&#125;/download/doc/test.html           ===&gt; ./html/test.html</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求3：&#123;server&#125;:&#123;ip&#125;/download/doc/test.html?a=1&amp;b=2   ===&gt; ./html/test.html?a=1&amp;b=2</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">请求4：&#123;server&#125;:&#123;ip&#125;/download/doc/test.html?a=1<span class="comment">#anc   ===&gt; ./html/test.html?a=1#anc</span></span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<h3 id="模块概述"><a href="#模块概述" class="headerlink" title="模块概述"></a>模块概述</h3>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E7%AC%94%E8%AE%B0/" rel="tag"><i class="fa fa-tag"></i> 笔记</a>
+              <a href="/tags/Nginx/" rel="tag"><i class="fa fa-tag"></i> Nginx</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/05/31/nginx-setup/" rel="prev" title="安装Nginx服务">
+      <i class="fa fa-chevron-left"></i> 安装Nginx服务
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/06/19/java-notion-notes/" rel="next" title="Java专业名词，概念术语等">
+      Java专业名词，概念术语等 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+  </div>
+  
+    <div id="lv-container" data-id="city" data-uid="MTAyMC81ODQxOS8zNDg4Mg=="></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%94%E8%AE%B0%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">笔记简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E8%AF%B4%E6%98%8E"><span class="nav-number">2.</span> <span class="nav-text">配置说明</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8C%87%E4%BB%A4%E8%A7%A3%E9%87%8A%E8%AF%B4%E6%98%8E"><span class="nav-number">2.1.</span> <span class="nav-text">指令解释说明</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#daemon%E6%8C%87%E4%BB%A4"><span class="nav-number">2.1.1.</span> <span class="nav-text">daemon指令</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%AF%AD%E6%B3%95"><span class="nav-number">2.1.1.1.</span> <span class="nav-text">语法</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E5%80%BC"><span class="nav-number">2.1.1.2.</span> <span class="nav-text">默认值</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%8E%AF%E5%A2%83"><span class="nav-number">2.1.1.3.</span> <span class="nav-text">使用环境</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B"><span class="nav-number">2.1.1.4.</span> <span class="nav-text">示例</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#master-process%E6%8C%87%E4%BB%A4"><span class="nav-number">2.1.2.</span> <span class="nav-text">master_process指令</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%AF%AD%E6%B3%95-1"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">语法</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E5%80%BC-1"><span class="nav-number">2.1.2.2.</span> <span class="nav-text">默认值</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%8E%AF%E5%A2%83-1"><span class="nav-number">2.1.2.3.</span> <span class="nav-text">使用环境</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-1"><span class="nav-number">2.1.2.4.</span> <span class="nav-text">示例</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#user%E6%8C%87%E4%BB%A4"><span class="nav-number">2.1.3.</span> <span class="nav-text">user指令</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%AF%AD%E6%B3%95-2"><span class="nav-number">2.1.3.1.</span> <span class="nav-text">语法</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E5%80%BC-2"><span class="nav-number">2.1.3.2.</span> <span class="nav-text">默认值</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-2"><span class="nav-number">2.1.3.3.</span> <span class="nav-text">示例</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#env%E6%8C%87%E4%BB%A4"><span class="nav-number">2.1.4.</span> <span class="nav-text">env指令</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%AF%AD%E6%B3%95-3"><span class="nav-number">2.1.4.1.</span> <span class="nav-text">语法</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%8E%AF%E5%A2%83-2"><span class="nav-number">2.1.4.2.</span> <span class="nav-text">使用环境</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E5%80%BC-3"><span class="nav-number">2.1.4.3.</span> <span class="nav-text">默认值</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-3"><span class="nav-number">2.1.4.4.</span> <span class="nav-text">示例</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#error-log%E6%8C%87%E4%BB%A4"><span class="nav-number">2.1.5.</span> <span class="nav-text">error_log指令</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%AF%AD%E6%B3%95-4"><span class="nav-number">2.1.5.1.</span> <span class="nav-text">语法</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E5%80%BC-4"><span class="nav-number">2.1.5.2.</span> <span class="nav-text">默认值</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%8E%AF%E5%A2%83-3"><span class="nav-number">2.1.5.3.</span> <span class="nav-text">使用环境</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-4"><span class="nav-number">2.1.5.4.</span> <span class="nav-text">示例</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#include%E6%8C%87%E4%BB%A4"><span class="nav-number">2.1.6.</span> <span class="nav-text">include指令</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%AF%AD%E6%B3%95-5"><span class="nav-number">2.1.6.1.</span> <span class="nav-text">语法</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E5%80%BC-5"><span class="nav-number">2.1.6.2.</span> <span class="nav-text">默认值</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%8E%AF%E5%A2%83-4"><span class="nav-number">2.1.6.3.</span> <span class="nav-text">使用环境</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-5"><span class="nav-number">2.1.6.4.</span> <span class="nav-text">示例</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#autoindex%E6%8C%87%E4%BB%A4"><span class="nav-number">2.1.7.</span> <span class="nav-text">autoindex指令</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-6"><span class="nav-number">2.1.7.1.</span> <span class="nav-text">示例</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#rewrite%E6%8C%87%E4%BB%A4"><span class="nav-number">2.1.8.</span> <span class="nav-text">rewrite指令</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#error-page%E6%8C%87%E4%BB%A4"><span class="nav-number">2.1.9.</span> <span class="nav-text">error_page指令</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%AF%AD%E6%B3%95-6"><span class="nav-number">2.1.9.1.</span> <span class="nav-text">语法</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E5%80%BC-6"><span class="nav-number">2.1.9.2.</span> <span class="nav-text">默认值</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%8E%AF%E5%A2%83-5"><span class="nav-number">2.1.9.3.</span> <span class="nav-text">使用环境</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-7"><span class="nav-number">2.1.9.4.</span> <span class="nav-text">示例</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8A%9F%E8%83%BD%E6%A8%A1%E5%9D%97%E9%85%8D%E7%BD%AE"><span class="nav-number">2.2.</span> <span class="nav-text">功能模块配置</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#gzip%E5%8E%8B%E7%BC%A9%E6%A8%A1%E5%9D%97"><span class="nav-number">2.2.1.</span> <span class="nav-text">gzip压缩模块</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-8"><span class="nav-number">2.2.1.1.</span> <span class="nav-text">示例</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#ssl%E5%8A%A0%E8%A7%A3%E5%AF%86%E6%A8%A1%E5%9D%97"><span class="nav-number">2.2.2.</span> <span class="nav-text">ssl加解密模块</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%AF%81%E4%B9%A6%E5%B7%A5%E5%85%B7"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">证书工具</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#OpenSSL"><span class="nav-number">2.2.2.2.</span> <span class="nav-text">OpenSSL</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#HTTP-Auth-Basic-%E6%A8%A1%E5%9D%97"><span class="nav-number">2.2.3.</span> <span class="nav-text">HTTP Auth Basic 模块</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E5%AF%86%E7%A0%81%E6%96%87%E4%BB%B6"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">生成密码文件</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E9%87%8D%E5%90%AF%E6%9C%8D%E5%8A%A1%E9%AA%8C%E8%AF%81"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">重启服务验证</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8C%87%E4%BB%A4%E5%B7%AE%E5%BC%82%E5%AF%B9%E6%AF%94"><span class="nav-number">2.3.</span> <span class="nav-text">指令差异对比</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#location%E5%9D%97%E4%B8%ADroot%E4%B8%8Ealias%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">2.3.1.</span> <span class="nav-text">location块中root与alias的区别</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E5%9D%97%E6%A6%82%E8%BF%B0"><span class="nav-number">3.</span> <span class="nav-text">模块概述</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zangh"
+      src="/images/my-avatar.jpg">
+  <p class="site-author-name" itemprop="name">zangh</p>
+  <div class="site-description" itemprop="description">不积跬步 无以至千里</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">57</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=1950343972&auto=1&height=66"></iframe>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ForeverZang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ForeverZang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/7619861326" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;7619861326" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://gitee.com/www.bau123.com" title="https:&#x2F;&#x2F;gitee.com&#x2F;www.bau123.com" rel="noopener" target="_blank">Gitee</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.csdn.net/u012285269" title="https:&#x2F;&#x2F;blog.csdn.net&#x2F;u012285269" rel="noopener" target="_blank">CSDN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://mvnrepository.com/" title="https:&#x2F;&#x2F;mvnrepository.com" rel="noopener" target="_blank">Maven</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://tool.lu/c/other" title="https:&#x2F;&#x2F;tool.lu&#x2F;c&#x2F;other" rel="noopener" target="_blank">Tools</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://regexper.com/" title="https:&#x2F;&#x2F;regexper.com" rel="noopener" target="_blank">Regexper</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://github.com/ForeverZang/ForeverZang" title="https:&#x2F;&#x2F;github.com&#x2F;ForeverZang&#x2F;ForeverZang" rel="noopener" target="_blank">Images</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zangh</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">251k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">3:48</span>
+</div>
+
+        
+
+
+
+
+
+
+<script data-pjax>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"mduyVmAWkh7R2nK98LxGBuFp-gzGzoHsz","app_key":"oncH6LSVH5snGThBoRpokkWT","server_url":null,"security":false};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/pjax/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+  <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three.min.js"></script>
+    <script defer src="//cdn.jsdelivr.net/gh/theme-next/theme-next-three@1/three-waves.min.js"></script>
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+<script>
+NexT.utils.loadComments(document.querySelector('#lv-container'), () => {
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+});
+</script>
+
+    </div>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":140,"height":240},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
